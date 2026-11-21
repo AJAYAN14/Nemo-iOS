@@ -133,6 +133,7 @@ public struct ThemeSettingsView: View {
     @State private var selectedAppIcon: AppIconOption = .blue
     @State private var selectedAccent: ThemeAccentColorOption = .green
     @State private var selectedIconStyle: SettingIconStyleOption = .softTranslucent
+    @State private var isTabBarHidden: Bool = false
 
     public init() {}
 
@@ -145,6 +146,52 @@ public struct ThemeSettingsView: View {
 
     private var currentAccentColor: Color {
         selectedAccent.color
+    }
+
+    // MARK: - 原生时间选择器绑定 (100% 遵循 iOS 原生 DatePicker 标准)
+    private var darkStartDate: Binding<Date> {
+        Binding {
+            dateFromTimeString(darkModeStartTime) ?? defaultStartDate
+        } set: { newDate in
+            darkModeStartTime = timeStringFromDate(newDate)
+        }
+    }
+
+    private var darkEndDate: Binding<Date> {
+        Binding {
+            dateFromTimeString(darkModeEndTime) ?? defaultEndDate
+        } set: { newDate in
+            darkModeEndTime = timeStringFromDate(newDate)
+        }
+    }
+
+    private var defaultStartDate: Date {
+        var comps = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        comps.hour = 21
+        comps.minute = 0
+        return Calendar.current.date(from: comps) ?? Date()
+    }
+
+    private var defaultEndDate: Date {
+        var comps = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        comps.hour = 7
+        comps.minute = 0
+        return Calendar.current.date(from: comps) ?? Date()
+    }
+
+    private func dateFromTimeString(_ str: String) -> Date? {
+        let parts = str.split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return nil }
+        var comps = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        comps.hour = parts[0]
+        comps.minute = parts[1]
+        return Calendar.current.date(from: comps)
+    }
+
+    private func timeStringFromDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
     }
 
     public var body: some View {
@@ -182,6 +229,7 @@ public struct ThemeSettingsView: View {
                     .padding(.vertical, 4)
                 }
                 .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                .listRowSeparator(.hidden) // 彻底消除机型预览下方的断裂分割线
 
                 // 自动切换开关 (Apple HIG 标准交互)
                 Toggle(isOn: $isAutoSwitch.animation(.easeInOut(duration: 0.2))) {
@@ -195,6 +243,7 @@ public struct ThemeSettingsView: View {
                     }
                 }
                 .tint(currentAccentColor)
+                .listRowSeparator(.hidden, edges: .top) // 确保自动开关上方无多余分割线
                 .onChange(of: isAutoSwitch) { auto in
                     if auto {
                         storedDarkMode = "auto"
@@ -212,30 +261,25 @@ public struct ThemeSettingsView: View {
                     .pickerStyle(.segmented)
                     .listRowSeparator(.hidden)
 
+                    // 原生自定义时间选择器（直接使用 iOS 官方 DatePicker，带原生转轮与数字小键盘弹层）
                     if storedAutoStrategy == "scheduled" {
-                        HStack {
+                        DatePicker(selection: darkStartDate, displayedComponents: .hourAndMinute) {
                             Label("深色开始时间", systemImage: "moon.fill")
                                 .foregroundStyle(.primary)
-                            Spacer()
-                            Text(darkModeStartTime)
-                                .font(.subheadline.bold())
-                                .foregroundStyle(currentAccentColor)
                         }
+                        .tint(currentAccentColor)
 
-                        HStack {
+                        DatePicker(selection: darkEndDate, displayedComponents: .hourAndMinute) {
                             Label("深色结束时间", systemImage: "sun.max.fill")
                                 .foregroundStyle(.primary)
-                            Spacer()
-                            Text(darkModeEndTime)
-                                .font(.subheadline.bold())
-                                .foregroundStyle(currentAccentColor)
                         }
+                        .tint(currentAccentColor)
                     }
                 }
             } header: {
                 Text("外观")
             } footer: {
-                Text("开启“自动”后，应用将始终与 iOS 系统设定的日出日落或全局外观偏好保持一致。")
+                Text("开启“自动”后，应用将始终与 iOS 系统设定的日出日落或全局外观偏好保持一致。选择“自定时段”可自由设定浅色与深色生效时间。")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -330,8 +374,13 @@ public struct ThemeSettingsView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("主题与外观")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar) // 子界面隐藏底部导航栏，仅在四个主界面显示
+        .toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar) // 带动画隐藏底栏，仅在四个主界面显示
+        .animation(.spring(response: 0.38, dampingFraction: 0.82), value: isTabBarHidden)
         .onAppear {
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
+                isTabBarHidden = true
+            }
+
             #if canImport(UIKit)
             if let currentAlternate = UIApplication.shared.alternateIconName {
                 if let match = AppIconOption.allCases.first(where: { $0.alternateIconName == currentAlternate }) {
@@ -353,6 +402,11 @@ public struct ThemeSettingsView: View {
                 selectedIconStyle = savedIconStyle
             }
             isAutoSwitch = (storedDarkMode == "auto")
+        }
+        .onDisappear {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                isTabBarHidden = false
+            }
         }
     }
 

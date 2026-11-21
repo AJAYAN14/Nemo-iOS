@@ -119,9 +119,7 @@ public struct TestHomeView: View {
     // MARK: - 2. 复习与巩固 (对齐 Android test_dashboard_section_review)
     private var reviewAndConsolidateSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("复习与巩固")
-                .font(.subheadline.bold())
-                .foregroundStyle(.secondary)
+            NemoSectionHeader("复习与巩固")
                 .padding(.horizontal, 4)
 
             HStack(spacing: 12) {
@@ -191,9 +189,7 @@ public struct TestHomeView: View {
     // MARK: - 3. 基础练习模式 (对齐 Android test_dashboard_section_basic: 单选、拼写、连线、排序)
     private var basicPracticeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("基础练习模式")
-                .font(.subheadline.bold())
-                .foregroundStyle(.secondary)
+            NemoSectionHeader("基础练习模式")
                 .padding(.horizontal, 4)
 
             VStack(spacing: 12) {
@@ -275,9 +271,7 @@ public struct TestHomeView: View {
     // MARK: - 4. 其他能力强化 (能力工坊)
     private var workshopSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("其他能力强化")
-                .font(.subheadline.bold())
-                .foregroundStyle(.secondary)
+            NemoSectionHeader("其他能力强化")
                 .padding(.horizontal, 4)
 
             Button {

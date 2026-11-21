@@ -176,9 +176,7 @@ public struct ProgressHomeView: View {
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.subheadline.bold())
-            .foregroundStyle(.secondary)
+        NemoSectionHeader(title)
             .padding(.horizontal, 4)
     }
 

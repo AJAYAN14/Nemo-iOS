@@ -76,7 +76,7 @@ public struct SettingsHomeView: View {
                     Label("云端备份历史", systemImage: "clock.arrow.circlepath")
                 }
             } header: {
-                Text("账户与同步")
+                NemoSectionHeader("账户与同步")
             }
 
             // MARK: - 2. 主题与外观 (对齐 Android settings_section_title_appearance)
@@ -106,7 +106,7 @@ public struct SettingsHomeView: View {
                     }
                 }
             } header: {
-                Text("主题与外观")
+                NemoSectionHeader("主题与外观")
             }
 
             // MARK: - 3. 学习设置 (对齐 Android settings_section_title_learning)
@@ -143,7 +143,7 @@ public struct SettingsHomeView: View {
                     Label("每日重置时间", systemImage: "clock")
                 }
             } header: {
-                Text("学习设置")
+                NemoSectionHeader("学习设置")
             } footer: {
                 Text("FSRS 算法根据个人遗忘反馈动态调参，优化学习间隔与复习负荷。")
             }
@@ -172,7 +172,7 @@ public struct SettingsHomeView: View {
                     Slider(value: $ttsSpeed, in: 0.5...2.0, step: 0.1)
                 }
             } header: {
-                Text("语音发音")
+                NemoSectionHeader("语音发音")
             } footer: {
                 Text("优先使用 iOS 原生 AVSpeechSynthesizer 离线发音，零延迟、零流量消耗。")
             }
@@ -205,7 +205,7 @@ public struct SettingsHomeView: View {
                         .foregroundStyle(.red)
                 }
             } header: {
-                Text("数据管理")
+                NemoSectionHeader("数据管理")
             }
 
 
@@ -233,7 +233,7 @@ public struct SettingsHomeView: View {
                         .foregroundStyle(.secondary)
                 }
             } header: {
-                Text("关于 Nemo")
+                NemoSectionHeader("关于 Nemo")
             } footer: {
                 Text("Nemo 专注于极致纯粹、无干扰的高效日语学习体验。")
             }

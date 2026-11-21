@@ -277,7 +277,7 @@ public struct ThemeSettingsView: View {
                     }
                 }
             } header: {
-                Text("外观")
+                NemoSectionHeader("外观")
             } footer: {
                 Text("开启“自动”后，应用将始终与 iOS 系统设定的日出日落或全局外观偏好保持一致。选择“自定时段”可自由设定浅色与深色生效时间。")
                     .font(.footnote)
@@ -346,7 +346,7 @@ public struct ThemeSettingsView: View {
                     }
                 }
             } header: {
-                Text("个性化定制")
+                NemoSectionHeader("个性化定制")
             }
 
             // MARK: 3. 应用桌面图标 (App Desktop Icon - 核心 8 款)
@@ -364,7 +364,7 @@ public struct ThemeSettingsView: View {
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 12, trailing: 12))
             } header: {
-                Text("应用桌面图标")
+                NemoSectionHeader("应用桌面图标")
             } footer: {
                 Text("提供 8 款专为 Apple 设计的 Squircle 流体玻璃高光图标，默认对齐 Android 旗舰蓝。点击可实时在桌面生效。")
                     .font(.footnote)

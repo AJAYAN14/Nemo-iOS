@@ -284,9 +284,7 @@ public struct LearningHomeView: View {
     // MARK: - 3. 学习资源区块 (对齐 Android title_learning_resources)
     private var learningResourcesSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("学习资源")
-                .font(.headline.bold())
-                .foregroundStyle(.primary)
+            NemoSectionHeader("学习资源")
                 .padding(.horizontal, 4)
 
             // 全宽卡片：热力图 (记录每日学习足迹)

@@ -12,8 +12,8 @@
 
 ### 1. 技术栈与环境
 * **开发语言**：Swift 6
-* **UI 框架**：SwiftUI（搭配 UIKit 必要系统级 API 互操作，如 `UIApplication.shared.setAlternateIconName`、`UIImpactFeedbackGenerator`）
-* **支持系统**：iOS 16.0 ~ iOS 26.5+
+* **UI 框架**：SwiftUI（100% 原生声明式架构，全量采用 `.sensoryFeedback` 触觉调度、`Gauge` 仪表盘、`Grid` 网格布局及 `ProgressView` 原生控件；搭配必要系统级 API 如 `UIApplication.shared.setAlternateIconName`）
+* **支持系统**：iOS 16.0 ~ iOS 26.5+ (基准 Target: 26.5)
 * **项目组织**：Xcode 16 PBXFileSystemSynchronizedRootGroup（自动同步磁盘物理目录，新增 Swift 源码自动参与编译）
 * **编译打包流程**：
   - Windows 宿主机与 VMware macOS 虚拟机双工通信；
@@ -63,9 +63,9 @@ E:\Nemo\iOS\Nemo\
 * **核心 Bento Grid（便当盒栅格）**：
   - **连续打卡徽章**：展示打卡天数（如 `12 天`）；
   - **学习模式切换器**：单词 / 语法（`LearningMode`）分段控制器，切换时全页面品牌主色即时响应（单词模式：`Color.orange`，语法模式：`Color.green`）；
-  - **今日新学进度大卡片**：环形进度圈，中间展示新学完成数，底部展示新学目标；
+  - **今日新学进度大卡片**：采用苹果官方原生 **`Gauge(value:in:)`** 搭配 `.gaugeStyle(.accessoryCircularCapacity)`，原生支持 VoiceOver 无障碍读屏，中间展示新学完成数，底部展示新学目标；
   - **辅助进度指示卡片**：复习进度（`已复习/总待复习`）、学习达成率（`%`）；
-  - **左右列高度绝对对齐**：使用 `PreferenceKey` 动态测量右侧双卡片高度，消除下沿悬空缺陷；
+  - **左右列高度绝对对齐**：采用 iOS 16+ 原生 **`Grid` 与 `GridRow`** 容器原生对齐，彻底废弃 `GeometryReader` 与 `PreferenceKey` 测量，消除二次布局回流开销；
   - **Bento 5 主行动胶囊按钮**：
     - 高度 50 pt，原生全胶囊轮廓；
     - 针对 iOS 26+ 优先触发原生 `.glassProminent` 液态玻璃样式，旧版本平滑降级 `.borderedProminent`；

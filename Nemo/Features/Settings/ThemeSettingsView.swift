@@ -324,6 +324,7 @@ public struct ThemeSettingsView: View {
                             .buttonStyle(.plain)
                         }
                     }
+                    .sensoryFeedback(.selection, trigger: selectedAccent)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 4)
                 }
@@ -361,6 +362,7 @@ public struct ThemeSettingsView: View {
                         .padding(.horizontal, 4)
                         .padding(.vertical, 8)
                     }
+                    .sensoryFeedback(.selection, trigger: selectedAppIcon)
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 12, trailing: 12))
             } header: {
@@ -545,10 +547,6 @@ public struct ThemeSettingsView: View {
         let isSelected = (selectedAppIcon == opt)
 
         Button {
-            #if canImport(UIKit)
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
-            #endif
             applyAppIconChange(opt)
         } label: {
             VStack(spacing: 8) {

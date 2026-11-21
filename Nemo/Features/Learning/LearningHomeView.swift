@@ -25,7 +25,6 @@ public struct LearningHomeView: View {
     @State private var itemsDue: Int = 14             // 待复习未完成数
     @State private var dailyCompletionRate: Int = 75  // 达成率 %
     @State private var username: String = "Nemo"
-    @State private var rightColumnHeight: CGFloat = 224
 
     // 动态状态（遵循 Android 真实业务状态）
     private var isLearned: Bool { currentProgress > 0 }
@@ -146,117 +145,100 @@ public struct LearningHomeView: View {
                 }
             }
 
-            // 中部核心指标网格: 左侧环形大卡片 + 右侧双统计卡片 (像素级严格等高)
-            HStack(spacing: 12) {
-                // Bento 2: 今日新学进度大卡片 (左侧，高度严格对齐右侧双卡片之和)
-                NemoCard(cornerRadius: 20, padding: 16) {
-                    VStack(spacing: 0) {
-                        Text("今日新学进度")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
+            // 中部核心指标网格: 左侧环形大卡片 + 右侧双统计卡片 (原生 Grid 自动等高)
+            Grid(horizontalSpacing: 12, verticalSpacing: 12) {
+                GridRow {
+                    // Bento 2: 今日新学进度大卡片 (左侧，原生 Grid 自动匹配右侧双卡片总高度)
+                    NemoCard(cornerRadius: 20, padding: 16) {
+                        VStack(spacing: 0) {
+                            Text("今日新学进度")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
 
-                        Spacer(minLength: 8)
+                            Spacer(minLength: 8)
 
-                        // 环形进度指示器 (垂直绝对居中)
-                        ZStack {
-                            Circle()
-                                .stroke(primaryModeColor.opacity(0.15), lineWidth: 8)
-                                .frame(width: 92, height: 92)
-
-                            Circle()
-                                .trim(from: 0, to: progressFraction)
-                                .stroke(primaryModeColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                                .frame(width: 92, height: 92)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut(duration: 0.3), value: progressFraction)
-
-                            Text("\(currentProgress)")
-                                .font(.system(size: 32, weight: .bold, design: .rounded))
-                                .foregroundStyle(.primary)
-                        }
-                        .frame(height: 98)
-
-                        Spacer(minLength: 8)
-
-                        Text("新学目标 \(dailyGoal)")
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .frame(height: rightColumnHeight)
-
-                // 右侧上下排列的两张统计卡片
-                VStack(spacing: 12) {
-                    // Bento 3: 复习进度卡片
-                    NemoCard(cornerRadius: 20, padding: 14) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.orange.opacity(0.12))
-                                    .frame(width: 32, height: 32)
-                                Image(systemName: "arrow.triangle.2.circlepath")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.orange)
-                            }
-
-                            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                Text("\(reviewedToday)")
-                                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                            // 环形进度指示器 (使用苹果官方 Gauge 原生控件)
+                            Gauge(value: progressFraction, in: 0...1) {
+                                Text("今日新学进度")
+                            } currentValueLabel: {
+                                Text("\(currentProgress)")
+                                    .font(.system(size: 30, weight: .bold, design: .rounded))
                                     .foregroundStyle(.primary)
-                                Text("/\(totalReviewItems)")
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.secondary)
                             }
+                            .gaugeStyle(.accessoryCircularCapacity)
+                            .tint(primaryModeColor)
+                            .scaleEffect(1.6)
+                            .frame(width: 92, height: 92)
 
-                            Text("复习进度")
-                                .font(.caption.weight(.medium))
+                            Spacer(minLength: 8)
+
+                            Text("新学目标 \(dailyGoal)")
+                                .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                    .frame(maxHeight: .infinity)
 
-                    // Bento 4: 学习达成率卡片
-                    NemoCard(cornerRadius: 20, padding: 14) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.green.opacity(0.12))
-                                    .frame(width: 32, height: 32)
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.green)
-                            }
+                    // 右侧上下排列的两张统计卡片
+                    VStack(spacing: 12) {
+                        // Bento 3: 复习进度卡片
+                        NemoCard(cornerRadius: 20, padding: 14) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .fill(Color.orange.opacity(0.12))
+                                        .frame(width: 32, height: 32)
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.orange)
+                                }
 
-                            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                Text("\(dailyCompletionRate)")
-                                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.primary)
-                                Text("%")
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                                    Text("\(reviewedToday)")
+                                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.primary)
+                                    Text("/\(totalReviewItems)")
+                                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Text("复习进度")
+                                    .font(.caption.weight(.medium))
                                     .foregroundStyle(.secondary)
                             }
-
-                            Text("学习达成率")
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        // Bento 4: 学习达成率卡片
+                        NemoCard(cornerRadius: 20, padding: 14) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .fill(Color.green.opacity(0.12))
+                                        .frame(width: 32, height: 32)
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.green)
+                                }
+
+                                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                                    Text("\(dailyCompletionRate)")
+                                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.primary)
+                                    Text("%")
+                                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Text("学习达成率")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity)
-                .background(
-                    GeometryReader { geo in
-                        Color.clear.preference(
-                            key: RightColumnHeightPreferenceKey.self,
-                            value: geo.size.height
-                        )
-                    }
-                )
-            }
-            .onPreferenceChange(RightColumnHeightPreferenceKey.self) { height in
-                if height > 0 && abs(rightColumnHeight - height) > 1 {
-                    rightColumnHeight = height
+                    .frame(maxWidth: .infinity)
                 }
             }
 
@@ -401,13 +383,5 @@ public struct LearningHomeView: View {
 #Preview {
     NavigationStack {
         LearningHomeView()
-    }
-}
-
-// 用于同步 Bento Grid 两列高度的 PreferenceKey
-private struct RightColumnHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
     }
 }

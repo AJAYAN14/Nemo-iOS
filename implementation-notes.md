@@ -69,6 +69,22 @@
   - 主图标默认设为旗舰冰蓝（`Apple-blue` / `DEFAULT`）；
   - `ThemeSettingsView` 默认选中冰蓝，调用 `UIApplication.shared.setAlternateIconName(nil)` 即可恢复系统默认图标，切换其他颜色调用对应的 `AppIcon-<color>`。
 
+- **全面拥抱 Apple 原生特性深度重构（零多余手写代码）**：
+  1. **环形进度仪表盘（Gauge）**：
+     - 在 `LearningHomeView.swift` 中，彻底移除了早期手写的 `Circle().stroke(...)` + `Circle().trim(...)` + `rotationEffect(-90)` 方案；
+     - 升级为 iOS 16+ 苹果官方原生的 **`Gauge(value:in:)`**，搭配 `.gaugeStyle(.accessoryCircularCapacity)` 与 `.scaleEffect(1.6)`；
+     - 原生支持 VoiceOver 屏幕朗读无障碍播报，系统 GPU 渲染效率更高，且代码极其精简。
+  2. **多列卡片绝对等高网格（Grid & GridRow）**：
+     - 彻底清除了 `LearningHomeView.swift` 中的 `RightColumnHeightPreferenceKey`、`@State private var rightColumnHeight` 以及右侧卡片的 `GeometryReader`；
+     - 采用 iOS 16+ 原生声明式 **`Grid` + `GridRow`** 容器，由 SwiftUI 原生布局引擎在同一渲染帧内自动均衡两列高度，杜绝了 PreferenceKey 触发的异步二次回流。
+  3. **微缩线性进度条（ProgressView）**：
+     - 在 `LearningSummaryCarouselCard.swift` 中，彻底移除 `GeometryReader` 与手算宽度胶囊；
+     - 替换为 iOS 原生 **`ProgressView(value: 0.7)`**，搭配 `.progressViewStyle(.linear)`，全工程实现零 `GeometryReader`。
+  4. **全声明式触觉马达调度（SensoryFeedback）**：
+     - 彻底淘汰了命令式导入 UIKit 实例化 `UIImpactFeedbackGenerator(style: .medium)` 的旧写法；
+     - 在 `NemoPressableButtonStyle.swift` 中通过 **`.sensoryFeedback(.impact(weight: .medium), trigger: configuration.isPressed)`** 和 `.sensoryFeedback(.impact(weight: .light), trigger: ...)` 接入系统触觉引擎；
+     - 在 `ThemeSettingsView.swift` 中为主题色选择与应用图标切换接入 **`.sensoryFeedback(.selection, trigger: ...)`**，完全由 iOS 操作系统底层统一调度物理反馈。
+
 - **自动编译与 GitHub 仓库全链路交付**：
-  - 代码库已完全推送到 GitHub: `https://github.com/AJAYAN14/Nemo-iOS.git`（commit `1a63cf0`）；
+  - 代码库已完全推送到 GitHub: `https://github.com/AJAYAN14/Nemo-iOS.git`；
   - Release IPA 已构建完成并导出至 `E:\Nemo\Nemo.ipa`。

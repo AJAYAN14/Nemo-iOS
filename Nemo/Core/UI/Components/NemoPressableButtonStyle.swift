@@ -21,6 +21,9 @@ public struct NemoPressableButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? pressedScale : 1.0)
             .opacity(configuration.isPressed ? pressedOpacity : 1.0)
             .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { _, isPressed in
+                isPressed
+            }
     }
 }
 
@@ -41,13 +44,8 @@ public struct NemoPrimaryInteractiveButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? 0.965 : 1.0)
             .brightness(configuration.isPressed ? -0.06 : 0.0)
             .animation(.interpolatingSpring(mass: 1.0, stiffness: 350, damping: 25), value: configuration.isPressed)
-            .onChange(of: configuration.isPressed) { _, isPressed in
-                if isPressed {
-                    #if canImport(UIKit)
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
-                    #endif
-                }
+            .sensoryFeedback(.impact(weight: .medium), trigger: configuration.isPressed) { _, isPressed in
+                isPressed
             }
     }
 }

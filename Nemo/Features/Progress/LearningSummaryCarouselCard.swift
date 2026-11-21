@@ -239,20 +239,14 @@ public struct LearningSummaryCarouselCard: View {
     private func visualHint(type: BentoVisualType) -> some View {
         switch type {
         case .progress:
-            // 迷你进度条
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.white.opacity(0.24))
-                        .frame(height: 4)
-
-                    Capsule()
-                        .fill(Color.white)
-                        .frame(width: geo.size.width * 0.7, height: 4)
-                }
-            }
-            .frame(height: 4)
-            .padding(.bottom, 2)
+            // 苹果官方原生微缩线性进度条 (Apple HIG 原生标准控件)
+            ProgressView(value: 0.7)
+                .progressViewStyle(.linear)
+                .tint(.white)
+                .background(Color.white.opacity(0.24))
+                .clipShape(Capsule())
+                .frame(height: 4)
+                .padding(.bottom, 2)
 
         case .dots:
             // 7 日点阵指示

@@ -15,19 +15,33 @@ public struct SettingsHomeView: View {
     @State private var username: String = "Nemo"
 
     // 主题外观
-    @State private var appearanceMode: String = "跟随系统"
-    private let appearanceOptions = ["浅色模式", "深色模式", "跟随系统"]
+    @AppStorage("settings_dark_mode_option") private var storedDarkMode: String = "auto"
+    private var appearanceMode: String {
+        switch storedDarkMode {
+        case "light": return "浅色模式"
+        case "dark": return "深色模式"
+        default: return "跟随系统"
+        }
+    }
 
-    // 学习设置
-    @State private var dailyWordGoal: Int = 20
-    @State private var dailyGrammarGoal: Int = 10
-    @State private var srsAlgorithm: String = "FSRS (新一代神经网络)"
-    @State private var resetHour: String = "04:00 (推荐)"
+    // 学习设置 (100% 对齐 Android SettingsScreen.kt 参数)
+    @AppStorage("settings_daily_word_goal") private var dailyWordGoal: Int = 20
+    @AppStorage("settings_daily_grammar_goal") private var dailyGrammarGoal: Int = 10
+    @AppStorage("settings_learning_day_reset_hour") private var learningDayResetHour: Int = 4
+    @AppStorage("settings_random_extract_new_content") private var isRandomNewContentEnabled: Bool = false
 
-    private let wordGoalOptions = [10, 20, 30, 50]
-    private let grammarGoalOptions = [5, 10, 15, 20]
-    private let srsOptions = ["FSRS (新一代神经网络)", "Anki SM-2 (经典)"]
-    private let resetHourOptions = ["00:00 (午夜)", "02:00", "04:00 (推荐)", "06:00"]
+    // 对齐 Android: listOf(5, 10, 20, 30, 50)
+    private let wordGoalOptions: [Int] = [5, 10, 20, 30, 50]
+    // 对齐 Android: listOf(5, 10, 15, 20, 25)
+    private let grammarGoalOptions: [Int] = [5, 10, 15, 20, 25]
+    // 对齐 Android: listOf(0, 2, 4, 5, 6)
+    private let resetHourOptions: [(hour: Int, label: String)] = [
+        (0, "凌晨 0:00 (午夜)"),
+        (2, "凌晨 2:00"),
+        (4, "凌晨 4:00 (推荐)"),
+        (5, "凌晨 5:00"),
+        (6, "凌晨 6:00")
+    ]
 
     // 语音发音
     @State private var autoPlayTTS: Bool = true
@@ -35,9 +49,19 @@ public struct SettingsHomeView: View {
     @State private var ttsSpeed: Double = 1.0
     private let voiceOptions = ["Kyoko (系统原生 · 女声)", "Otoya (系统原生 · 男声)", "Siri 日语音声"]
 
-
-
     public init() {}
+
+    @ViewBuilder
+    private func settingIcon(systemName: String, color: Color) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(color)
+                .frame(width: 28, height: 28)
+            Image(systemName: systemName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white)
+        }
+    }
 
     public var body: some View {
         List {
@@ -85,14 +109,7 @@ public struct SettingsHomeView: View {
                     ThemeSettingsView()
                 } label: {
                     HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .fill(Color.purple)
-                                .frame(width: 28, height: 28)
-                            Image(systemName: "circle.righthalf.filled")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.white)
-                        }
+                        settingIcon(systemName: "circle.righthalf.filled", color: .purple)
 
                         Text("主题与外观")
                             .font(.body)
@@ -109,43 +126,149 @@ public struct SettingsHomeView: View {
                 NemoSectionHeader("主题与外观")
             }
 
-            // MARK: - 3. 学习设置 (对齐 Android settings_section_title_learning)
+            // MARK: - 3. 学习设置 (100% 对齐 Android settings_section_title_learning)
             Section {
-                Picker(selection: $dailyWordGoal) {
-                    ForEach(wordGoalOptions, id: \.self) { goal in
-                        Text("\(goal) 词/天").tag(goal)
+                // 1. 每日单词目标 (5, 10, 20, 30, 50)
+                HStack(spacing: 12) {
+                    settingIcon(systemName: "target", color: .orange)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("每日单词目标")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                        Text("设置每天要学习的单词数量")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                } label: {
-                    Label("每日新词目标", systemImage: "sparkles")
+
+                    Spacer()
+
+                    Picker("", selection: $dailyWordGoal) {
+                        ForEach(wordGoalOptions, id: \.self) { goal in
+                            Text("\(goal)个").tag(goal)
+                        }
+                    }
+                    .pickerStyle(.menu)
                 }
 
-                Picker(selection: $dailyGrammarGoal) {
-                    ForEach(grammarGoalOptions, id: \.self) { goal in
-                        Text("\(goal) 条/天").tag(goal)
+                // 2. 每日语法目标 (5, 10, 15, 20, 25)
+                HStack(spacing: 12) {
+                    settingIcon(systemName: "book.closed.fill", color: .green)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("每日语法目标")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                        Text("设置每天要学习的语法数量")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                } label: {
-                    Label("每日语法目标", systemImage: "book.pages")
+
+                    Spacer()
+
+                    Picker("", selection: $dailyGrammarGoal) {
+                        ForEach(grammarGoalOptions, id: \.self) { goal in
+                            Text("\(goal)条").tag(goal)
+                        }
+                    }
+                    .pickerStyle(.menu)
                 }
 
-                Picker(selection: $srsAlgorithm) {
-                    ForEach(srsOptions, id: \.self) { algo in
-                        Text(algo).tag(algo)
+                // 3. 学习日重置时间 (0, 2, 4, 5, 6)
+                HStack(spacing: 12) {
+                    settingIcon(systemName: "timer", color: .mint)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("学习日重置时间")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                        Text("零点跨天保护，过了此时间才算新的一天")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                } label: {
-                    Label("记忆算法模型", systemImage: "brain.head.profile")
+
+                    Spacer()
+
+                    Picker("", selection: $learningDayResetHour) {
+                        ForEach(resetHourOptions, id: \.hour) { item in
+                            Text(item.label).tag(item.hour)
+                        }
+                    }
+                    .pickerStyle(.menu)
                 }
 
-                Picker(selection: $resetHour) {
-                    ForEach(resetHourOptions, id: \.self) { hour in
-                        Text(hour).tag(hour)
+                // 4. 新内容乱序抽取 (Toggle)
+                HStack(spacing: 12) {
+                    settingIcon(systemName: "shuffle", color: .teal)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("新内容乱序抽取")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                        Text(isRandomNewContentEnabled ? "随机抽取新内容" : "按顺序抽取新内容")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                } label: {
-                    Label("每日重置时间", systemImage: "clock")
+
+                    Spacer()
+
+                    Toggle("", isOn: $isRandomNewContentEnabled)
+                        .labelsHidden()
                 }
+
+                // 5. 记忆算法配置 (对齐 Android settings_item_title_algorithm)
+                Button {
+                    // 进入记忆算法配置
+                } label: {
+                    HStack(spacing: 12) {
+                        settingIcon(systemName: "brain.head.profile", color: .purple)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("记忆算法配置")
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                            Text("步进、提前复习与 Leech 策略")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.bold())
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                // 6. AI 工坊配置 (对齐 Android settings_item_title_ai_workshop)
+                Button {
+                    // 进入 AI 工坊配置
+                } label: {
+                    HStack(spacing: 12) {
+                        settingIcon(systemName: "sparkles", color: .blue)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("AI 工坊配置")
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                            Text("设置 API Key 与 AI 模型")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.bold())
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
             } header: {
                 NemoSectionHeader("学习设置")
             } footer: {
-                Text("FSRS 算法根据个人遗忘反馈动态调参，优化学习间隔与复习负荷。")
+                Text("学习目标与重置时点将影响每日新学分配与连续打卡统计。")
             }
 
             // MARK: - 4. 语音发音 (对齐 Android settings_section_title_voice)

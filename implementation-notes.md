@@ -27,6 +27,13 @@
     2. **层级基底而非纯黑反色 (Elevation & Semantic Hierarchy)**：全量使用系统级语义背景 `systemGroupedBackground`（浅色 `#F2F2F7`，深色 `#000000`）与抬升卡片背景 `secondarySystemGroupedBackground`（浅色 `#FFFFFF`，深色 `#1C1C1E`）；
     3. **iPhone 原生机身宽高比 (9:19.5)**：预览卡片按 88×180pt 黄金比例重构，搭配灵动岛、状态栏、主屏幕微缩元素与底部 Home Bar 横条，直观复刻真实 iPhone；
     4. **全局统一调度**：在 `NemoApp.swift` 的 `WindowGroup` 挂载 `.preferredColorScheme(currentColorScheme)`，使四个主界面与所有弹窗全局毫秒级同步切换。
+  - **分割线断裂 Bug 精准修复**：机型预览区域因包含居中弹性 `Spacer()`，导致 SwiftUI 默认将下边分割线锚定在 87pt 处产生断裂半截残线。现已为该行与自动行配置 `.listRowSeparator(.hidden)`，使机型预览与自动开关在卡片内一体化呈现。
+  - **100% 苹果官方原生时间选择器 (DatePicker)**：
+    - 针对“自定时段”功能，弃用任何手写仿造弹窗，直接引入苹果原生 `DatePicker(selection: ..., displayedComponents: .hourAndMinute)`；
+    - 右侧呈现苹果标准原生时间胶囊按钮（如 `21:00`），点击呼出 iOS 系统级时分转轮与数字小键盘浮层，直接双向联动持久化存储。
+  - **底部导航栏升降平滑物理弹簧动效**：
+    - 采用 `.animation(.spring(response: 0.38, dampingFraction: 0.82), value: isTabBarHidden)`；
+    - 进入子界面时底栏平滑下沉隐去，返回主界面时自然上浮弹出，提供如丝般顺滑的转场交互。
 
 - **子界面隐藏底部导航栏（对齐 Android）**：
   - 在 `ThemeSettingsView` 等子页面应用 `.toolbar(.hidden, for: .tabBar)`；

@@ -83,12 +83,29 @@ public struct SettingsHomeView: View {
 
             // MARK: - 2. 主题与外观 (对齐 Android settings_section_title_appearance)
             Section {
-                Picker(selection: $appearanceMode) {
-                    ForEach(appearanceOptions, id: \.self) { mode in
-                        Text(mode).tag(mode)
-                    }
+                NavigationLink {
+                    ThemeSettingsView()
                 } label: {
-                    Label("主题模式", systemImage: "circle.righthalf.filled")
+                    HStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .fill(Color.purple)
+                                .frame(width: 28, height: 28)
+                            Image(systemName: "circle.righthalf.filled")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+
+                        Text("主题与外观")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+
+                        Text(appearanceMode)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             } header: {
                 Text("主题与外观")

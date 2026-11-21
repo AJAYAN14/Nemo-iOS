@@ -84,10 +84,19 @@
   - 间距与行高：图标与文本间距设为 `12 pt`，整行设定基线最小高度 `63 pt`，垂直内边距为 `8 pt`；
   - 排版与层级：主标题升级为 `.font(.body)`（17pt），副标题采用针对中文优化的 `.font(.footnote)`（13pt），中文字形上下留白间距精确设定为 `5 pt`；
   - 展开与分割：右侧箭头采用 `chevron.forward`（`.footnote.weight(.semibold)`），分割线左侧缩进对齐文本起点（`49 pt`）。
+- **主题与外观界面（ThemeSettingsView）与 8 款流体玻璃图标 100% 落地**：
+  - **入口页导航联动**：在 `SettingsHomeView.swift` 中将原行内 Picker 升级为原生 `NavigationLink` 入口行，配备紫色圆角矩形图标井、主标题与当前状态副标题；
+  - **三大显示与定制分区**：
+    1. **显示模式**：浅色/深色双微缩卡片网格切换、自动切换开关、跟随系统/定时切换策略；
+    2. **个性化定制**：5 色主题强调色切换（薄荷绿/活力橙/旗舰蓝/赛博紫/樱花粉）、设置项图标风格切换（柔和半透/鲜活纯色）；
+    3. **8 款 Apple 原生流体玻璃桌面图标选择器**：横向滚动卡片，展示薄荷翠绿、黑曜透亮、旗舰冰蓝、鲜活亮橙、樱花透粉、赛博幻紫、珊瑚暖红、璨金阳光；
+  - **系统级 Alternate Icons 支持**：
+    - 在 `project.pbxproj` 中启用 `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES`；
+    - 将 8 款 1024×1024 完整尺寸图标打包注入 `Assets.xcassets`，同时支持应用内高清渲染与桌面动态换图标（`UIApplication.shared.setAlternateIconName`）。
 - **Xcode 自动化编译与 IPA 生成通过**：
   - 借助 Windows 宿主机与 macOS 虚拟机（VMware）混合架构，通过 `vmrun` 管道完成无签名 Release 构建与 IPA 打包；
   - 编译状态：`** BUILD SUCCEEDED **`，exit code 0；
-  - 最新产物：`E:\Nemo\Nemo.ipa`（最新时间戳 2026/11/22 00:40，大小约 217 KB，100% 复用 Clash-Client 开始测试按钮同款 .glassProminent 液态玻璃架构 + 50pt 标准大胶囊高度），可直接导入爱思助手进行个人证书自签安装。
+  - 最新产物：`E:\Nemo\Nemo.ipa`（最新时间戳 2026/11/22 01:14，大小约 8.3 MB，已打包全部 8 款高清流体玻璃图标、ThemeSettingsView 与 50pt 胶囊主按钮），可直接导入爱思助手进行个人证书自签安装。
 
 ## 2. 待复核与后续推进问题（Questions for Review）
 - **SRS 数据持久化与网络接入**：下一步待用户确定时，将这 4 大界面的响应式 `@State` 状态平滑接入 Swift 原生 `@Observable FeatureStore` 与 Supabase 网络/本地 SQLite 数据库。

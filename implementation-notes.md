@@ -21,6 +21,16 @@
     - 账户与同步、主题与外观、学习设置、语音发音、数据管理、关于 Nemo。
     - 移除已由 iOS 系统级支持的实验室分区。
 
+- **全应用内容卡片大标题统一（Apple HIG 规范方案 A）**：
+  - 针对所有卡片上方标题零散不一（部分为 13pt footnote 灰字、部分为 subheadline 灰字、部分为粗体）的割裂现状，提炼全局通用组件 `NemoSectionHeader.swift`；
+  - 严格遵循 Apple HIG **Headline 17pt 粗体**（`.font(.headline.weight(.bold))`）与自适应纯黑/纯白（`.foregroundStyle(.primary)`）规范，禁用系统小写英文全大写转换（`.textCase(nil)`）；
+  - 全面覆盖并统一更新：
+    1. **个人设置（SettingsHomeView）**：账户与同步、主题与外观、学习设置、语音发音、数据管理、关于 Nemo；
+    2. **主题外观（ThemeSettingsView）**：外观、个性化定制、应用桌面图标；
+    3. **学习主页（LearningHomeView）**：学习资源；
+    4. **进度主页（ProgressHomeView）**：统计与分析、资料与词库、强化与突破；
+    5. **测试主页（TestHomeView）**：复习与巩固、基础练习模式、其他能力强化。
+
 - **深浅色外观规范与 Apple HIG 严格对齐**：
   - 查阅 Apple Human Interface Guidelines - Dark Mode 核心准则：
     1. **优先尊重系统偏好 (Respect System Preferences)**：提供“自动/跟随系统”作为默认推荐，无缝响应 iOS 全局深浅色调度；

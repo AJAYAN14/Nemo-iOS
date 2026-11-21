@@ -35,9 +35,7 @@ public struct SettingsHomeView: View {
     @State private var ttsSpeed: Double = 1.0
     private let voiceOptions = ["Kyoko (系统原生 · 女声)", "Otoya (系统原生 · 男声)", "Siri 日语音声"]
 
-    // 实验室
-    @State private var enableLiquidGlass: Bool = true
-    @State private var cornerStyle: String = "G2 连续平滑曲率"
+
 
     public init() {}
 
@@ -210,23 +208,7 @@ public struct SettingsHomeView: View {
                 Text("数据管理")
             }
 
-            // MARK: - 6. 实验室 (对齐 Android settings_section_title_lab)
-            Section {
-                Toggle(isOn: $enableLiquidGlass) {
-                    Label("液态玻璃实验室", systemImage: "drop.fill")
-                }
 
-                HStack {
-                    Label("圆角曲率实验室", systemImage: "square.dashed")
-                    Spacer()
-                    Text(cornerStyle)
-                        .foregroundStyle(.secondary)
-                }
-            } header: {
-                Text("实验室")
-            } footer: {
-                Text("探索针对 iOS 现代特性的液态材质反射与 G2 平滑连续曲率演进效果。")
-            }
 
             // MARK: - 7. 关于 Nemo (对齐 Android settings_section_title_about)
             Section {

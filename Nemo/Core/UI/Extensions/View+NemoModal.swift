@@ -7,20 +7,20 @@
 
 import SwiftUI
 
-/// 抽屉模态角色类型（严格对齐 Clash 客户端规范）
+/// 模态视窗自适应展示角色类型
 public enum NemoModalRole: Sendable {
-    /// 页面级全高/半高自适应抽屉
+    /// 页面级全高自适应模态
     case page
-    /// 表单级抽屉
+    /// 表单级自适应模态
     case form
-    /// 紧凑贴合内容抽屉
+    /// 紧凑贴合内容模态
     case fitted
 }
 
 public extension View {
-    /// 统一抽屉弹窗自适应 Presentation 规范（严格对齐 Clash 客户端规范）
+    /// 统一模态弹窗自适应 Presentation 规范
     ///
-    /// 对齐现代 iOS 18+ 原生 presentationSizing，非 iOS 18 保持系统原生全屏 Page Sheet 卡片。
+    /// 适配 iOS 18+ 原生 presentationSizing，低版本系统保持系统原生全屏 Page Sheet 卡片。
     @ViewBuilder
     func nemoModalPresentation(_ role: NemoModalRole = .page) -> some View {
         if #available(iOS 18.0, *) {
@@ -37,9 +37,9 @@ public extension View {
         }
     }
 
-    /// 标准抽屉视窗外观修饰（严格对齐 Clash 规范）
+    /// 标准抽屉视窗外观修饰
     ///
-    /// 隐藏顶部拖拽横杠，完全继承苹果原生 Sheet 系统自适应硬件大圆角，严禁人工写死固定圆角。
+    /// 隐藏顶部拖拽横杠，完全继承苹果原生 Sheet 系统自适应硬件大圆角。
     @ViewBuilder
     func nemoSheetSurface() -> some View {
         self
@@ -66,7 +66,7 @@ public extension View {
         .nemoSheetSurface()
     }
 
-    /// 内联标题修饰符（对齐 Clash 的 ClashInlinePageTitle 规范）
+    /// 内联导航栏标题修饰符
     @ViewBuilder
     func nemoInlinePageTitle() -> some View {
         if #available(iOS 17.0, *) {
@@ -76,7 +76,7 @@ public extension View {
         }
     }
 
-    /// 表单顶部紧凑边距修饰符（对齐 Clash 的 clashConfigurationFormSpacing 规范）
+    /// 表单顶部紧凑边距修饰符
     @ViewBuilder
     func nemoConfigurationFormSpacing() -> some View {
         if #available(iOS 17.0, *) {
@@ -87,13 +87,41 @@ public extension View {
         }
     }
 
-    /// 导航栏背景完全透明穿透修饰符（严格对齐 Clash 客户端，向上滑动时背景全透明，无毛玻璃遮罩）
+    /// 导航栏背景完全透明穿透修饰符
+    ///
+    /// 页面向上滑动时导航栏背景保持全透明，彻底消除系统默认的毛玻璃材质与分割线遮罩。
     @ViewBuilder
     func nemoTransparentNavigationBar() -> some View {
         if #available(iOS 16.0, *) {
-            self.toolbarBackground(.hidden, for: .navigationBar)
+            self
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .background(NemoTransparentNavBarHelper())
         } else {
             self
+        }
+    }
+}
+
+/// 导航栏透明外观注入辅助器（彻底消除滚动时系统默认激活的毛玻璃与分割线）
+private struct NemoTransparentNavBarHelper: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        let controller = UIViewController()
+        controller.view.backgroundColor = .clear
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        DispatchQueue.main.async {
+            guard let navigationBar = uiViewController.navigationController?.navigationBar else { return }
+            let transparentAppearance = UINavigationBarAppearance()
+            transparentAppearance.configureWithTransparentBackground()
+            transparentAppearance.backgroundColor = .clear
+            transparentAppearance.shadowColor = .clear
+            transparentAppearance.backgroundEffect = nil
+
+            navigationBar.standardAppearance = transparentAppearance
+            navigationBar.scrollEdgeAppearance = transparentAppearance
+            navigationBar.compactAppearance = transparentAppearance
         }
     }
 }

@@ -322,7 +322,7 @@ public struct NemoSplashView: View {
         }
     }
 
-    // MARK: - 动效编排主时间线（严格对齐 Android 毫秒级节拍）
+    // MARK: - 动效编排主时间线
 
     @MainActor
     private func startSplashAnimationTimeline() async {
@@ -435,7 +435,7 @@ public struct NemoSplashView: View {
     }
 }
 
-// MARK: - 矢量图形辅助几何定义（与 Android 保持绝对一致）
+// MARK: - 矢量图形辅助几何定义
 
 /// 心形矢量路径（基于 24x24 viewBox 等比适配）
 struct HeartShape: Shape {

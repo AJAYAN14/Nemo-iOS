@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// 通用抽屉单选可选项协议（对齐 Clash 客户端规范）
+/// 抽屉单选面板通用数据项协议
 public protocol NemoPickerItem: Identifiable {
     /// 唯一标识
     var id: String { get }
@@ -19,13 +19,13 @@ public protocol NemoPickerItem: Identifiable {
     var badge: String? { get }
 }
 
-/// 通用原生抽屉单选面板（100% 对齐 Clash 客户端「配置中心」行规范）
+/// 通用原生抽屉单选面板
 ///
-/// 具备以下标志性架构特性：
+/// 遵循 iOS 原生视觉规范，具备以下核心交互特性：
 /// 1. 左侧 24x24pt 绝对占位状态槽：未选中项透明占位对齐，当前选中项展示系统主题色加粗 checkmark；
-/// 2. 中间信息区：发音人/配置名称（选中项 semibold 加粗）+ 微胶囊徽章 + 辅助描述副文本；
-/// 3. 右侧独立操作槽：支持接入 44x44pt 独立无冲突操作按钮（如行内试听播放按钮）；
-/// 4. 纯血苹果原生 Inset Grouped List 布局，左上角标准圆底加粗 xmark 关闭按钮。
+/// 2. 中间信息区：选项主标题（选中项 semibold 加粗）+ 微胶囊徽章 + 辅助描述副文本；
+/// 3. 右侧独立操作槽：支持外挂 44x44pt 独立无冲突操作按钮（如行内试听播放按钮）；
+/// 4. 纯血苹果原生 Inset Grouped List 布局与透明穿透导航栏。
 public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: View {
     private let title: String
     private let items: [Item]
@@ -82,7 +82,7 @@ public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: V
         .nemoSheetSurface()
     }
 
-    // MARK: - 列表单行排版 (对齐 Clash 配置中心 standardProfileRow 规范)
+    // MARK: - 列表单行排版
 
     @ViewBuilder
     private func row(for item: Item) -> some View {
@@ -139,7 +139,7 @@ public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: V
         }
     }
 
-    // MARK: - 状态槽 (对齐 Clash statusSlot)
+    // MARK: - 状态槽
 
     @ViewBuilder
     private func statusSlot(isCurrent: Bool) -> some View {

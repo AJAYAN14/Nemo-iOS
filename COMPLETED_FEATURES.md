@@ -291,10 +291,13 @@ E:\Nemo\iOS\Nemo\
 * **重置时间纯净化**：重置时间选项彻底删除冗余中文括号（如“凌晨 4:00 (推荐)”），全部改为国际标准纯净时间格式：`00:00`、`02:00`、`04:00`、`05:00`、`06:00`；
 * **说明下沉至 Footer**：将跨天保护等长文本规则统一下沉至 Section Footer 通栏灰字展示。
 
-### 5. 语音设置（`TtsSettingsView.swift`）100% 苹果原生化重构
-* **严格落实“有原生的就用原生的，不要自己写”**：
-  - **原生抽屉弹窗（Bottom Sheet）**：语音选择全面升级为 Apple 原生 `.sheet` 抽屉弹窗，配置 `.presentationDetents([.medium, .large])`、`.presentationDragIndicator(.visible)` 与 `.presentationCornerRadius(24)`；
-  - **优雅单选与触觉反馈**：抽屉内采用 Inset Grouped 列表排版，展示发音人姓名与“女声 · 高保真”等标签，右侧带有系统蓝色 Checkmark；点击即时保存并伴随系统触觉反馈（`.sensoryFeedback(.selection)`）后自动收起；
+### 5. 语音设置（`TtsSettingsView.swift`）100% 苹果原生化与抽屉弹窗重构（对齐 Clash-Client 规范）
+* **严格落实“有原生的就用原生的，不要自己写”，对齐成熟开源项目 `Clash-Client` 抽屉范式（`ClashProfilePickerCard` & `ClashSheetCloseButton`）**：
+  - **原生抽屉弹窗（Bottom Sheet）**：发音人选择全面升级为 Apple 原生 `.sheet` 抽屉弹窗，配置 `.presentationDetents([.medium, .large])` 支持半屏/全屏自适应展开、`.presentationDragIndicator(.visible)` 原生系统把手胶囊与 `.presentationCornerRadius(24)` G2 连续顶部圆角；
+  - **原生圆底关闭按钮**：淘汰传统文字式“完成”按钮，在右上角采用标准的浅灰色圆底加粗 `xmark` 原生关闭图标（`Circle().fill(Color(uiColor: .tertiarySystemFill))`），符合现代 iOS 原生抽屉交互规范；
+  - **极简轻量化呈现**：彻底移除抽屉内嘈杂的 Footer 提示文字，列表纯净呈现；
+  - **优雅单选与触觉反馈**：抽屉内采用 Inset Grouped 列表排版，展示发音人姓名与“女声 · 高保真”等标签，当前选中项右侧带有系统蓝色 Checkmark；点击即时保存至 `@AppStorage`、伴随系统触觉反馈（`.sensoryFeedback(.selection)`）并自动收起抽屉；
+  - **宿主行尾指示器**：设置主界面的发音人行尾统一采用苹果标准 `chevron.forward` 展开指示箭头；
   - **动态系统音色**：基于原生 `AVSpeechSynthesisVoice.speechVoices()` 自动过滤并列举本地神经引擎已安装的发音人（Kyoko、Otoya、Siri、婷婷等）；
 * **Apple 官方标志性语速滑块**：
   - 语速滑块两端接入 Apple 官方标准的乌龟（`Image(systemName: "tortoise.fill")`）与兔子（`Image(systemName: "hare.fill")`）辅助图标；

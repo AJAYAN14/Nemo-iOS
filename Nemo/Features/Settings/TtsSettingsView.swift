@@ -173,8 +173,8 @@ public struct TtsSettingsView: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
 
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
+                        Image(systemName: "chevron.forward")
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -192,8 +192,8 @@ public struct TtsSettingsView: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
 
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
+                        Image(systemName: "chevron.forward")
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -412,21 +412,24 @@ public struct TtsSettingsView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                } footer: {
-                    Text(target == .japanese
-                         ? "支持系统的原生日语音频库，优先选用高保真发音人，音质更加真实自然。"
-                         : "支持系统的原生中文音频库，包含标准普通话与特色发音。")
                 }
             }
             .listStyle(.insetGrouped)
             .navigationTitle(target.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
                         activeVoiceSheet = nil
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .padding(7)
+                            .background(Circle().fill(Color(uiColor: .tertiarySystemFill)))
                     }
-                    .font(.body.weight(.semibold))
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("关闭")
                 }
             }
         }

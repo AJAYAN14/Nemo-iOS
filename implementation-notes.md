@@ -125,15 +125,14 @@
          - 原生 `Button` 承载“试听日语发音”、“试听中文释义”与恢复默认设置；
       5. 严格采用 Apple DocC（`///`）纯净注释，杜绝任何外部元说明与自造轮子。
 
-  - **语音发音人选择升级为 iOS 原生抽屉弹窗（Bottom Sheet）**：
+  - **语音发音人选择升级为 iOS 原生抽屉弹窗（Bottom Sheet，对齐 Clash-Client 规范）**：
     - 针对上一版使用 `Picker(.navigationLink)` 跳转整个页面的割裂体验，按用户要求重构成 100% 苹果原生抽屉弹窗（`.sheet`）；
-    - **原生参数与材质**：
-      1. 采用 `.presentationDetents([.medium, .large])`，支持半屏抽屉与全屏拖拽展开；
-      2. 采用 `.presentationDragIndicator(.visible)`，呈现 iOS 标准系统拖拽把手胶囊；
-      3. 采用 `.presentationCornerRadius(24)`，圆润顺滑的 G2 连续顶部圆角；
-      4. 列表行采用双层排版（顶部发音人名称加粗，下方显示“女声 · 高保真”等属性标签），右侧显示苹果原生蓝色打钩标记（`checkmark`）；
-      5. 点击选项后自动持久化到 `@AppStorage`，触发系统触觉马达微反馈（`.sensoryFeedback(.selection, trigger: ...)`）并自动收起抽屉；
-      6. 导航栏顶部集成右上角标准“完成”按钮，符合 Apple HIG 弹窗确认交互准则。
+    - **深度解析并对齐 Clash-Client 原生抽屉范式（ClashProfilePickerCard & ClashSheetCloseButton）**：
+      1. **原生参数与材质**：采用 `.presentationDetents([.medium, .large])` 支持半屏抽屉与全屏拖拽展开，`.presentationDragIndicator(.visible)` 呈现系统拖拽把手胶囊，`.presentationCornerRadius(24)` 赋予 G2 连续顶部圆角；
+      2. **右上角原生圆底关闭按钮**：淘汰老旧的文字式“完成”按钮，对齐 `ClashSheetCloseButton` 规范，采用浅灰色圆底加粗 `xmark` 图标（`Image(systemName: "xmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.secondary).padding(7).background(Circle().fill(Color(uiColor: .tertiarySystemFill)))`），并配置 `.accessibilityLabel("关闭")`；
+      3. **极简列表排版**：彻底移除冗余的 Section Footer 说明文本，列表行采用双层排版（顶部发音人名称加粗，下方显示“女声 · 高保真”属性标签），右侧显示苹果原生蓝色打钩标记（`checkmark`）；
+      4. **即点即选与即时收起**：列表行采用 `.buttonStyle(.plain)`，点击任意发音人即刻触发 `.sensoryFeedback(.selection)` 物理震动反馈、自动持久化至 `@AppStorage` 并立即关闭弹窗（`activeVoiceSheet = nil`）；
+      5. **宿主设置项箭头规范化**：主设置界面的发音人行尾统一采用苹果标准展开箭头 `chevron.forward`（替换容易产生歧义的 `chevron.up.chevron.down`），与 Apple HIG 保持严格一致。
 
     - **淘汰几年前老旧做法**：彻底摒弃静态图集（`LaunchImage` 废弃）、庞杂 Storyboard 历史包袱与主线程 `sleep` 恶习，拥抱现代 Xcode 自动生成冷启动屏与 SwiftUI 声明式动效接管；
     - **100% 视觉对齐 Android 真实蓝本**：

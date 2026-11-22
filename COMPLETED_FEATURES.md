@@ -227,9 +227,34 @@ E:\Nemo\iOS\Nemo\
   - 卡片抬升层：`Color.nemoSecondaryGroupedBackground`（浅色 `#FFFFFF`，深色 `#1C1C1E` 标准抬升层）；
   - 跨平台支持：iOS 环境自动映射 UIKit 语义色，Mac 环境映射 AppKit 语义色，彻底杜绝 Xcode 预览与不同目标设备编译报错。
 
-### 3. `NemoPressableButtonStyle.swift` (微动效按钮样式)
-* 模拟苹果真实物理按压弹簧缩放（0.965 系数）；
-* 硬件级 Taptic Engine（`UIImpactFeedbackGenerator(.medium)`）即时触觉反馈。
+### 4. `NemoSheetCloseButton.swift` (原生标准抽屉圆底关闭按钮)
+* **规范对齐**：100% 严格对齐开源项目 `Clash-Client` 的 `ClashSheetCloseButton` 规范；
+* **视觉与交互规格**：
+  - 图标：系统加粗 xmark（`Image(systemName: "xmark").font(.system(size: 13, weight: .bold))`）；
+  - 衬底：标准浅灰色圆形背景（`Circle().fill(Color(uiColor: .tertiarySystemFill))`），内边距 7pt；
+  - 触控无障碍：44×44pt 最小无障碍触控目标尺寸，配置 `.accessibilityLabel("关闭")`；
+  - 位置规范：置于导航栏左上角（`placement: .cancellationAction`）。
+
+### 5. `View+NemoModal.swift` (统一抽屉模态与视窗修饰扩展)
+* **规范对齐**：对齐 `Clash-Client` 的 `clashModalPresentation` 统一多端自适应模态引擎；
+* **全生命周期自适应**：
+  - **iOS 18+ 规范**：使用原生 `presentationSizing(.page / .form / .fitted)`；
+  - **向下兼容 (iOS 16/17)**：自适应降级为 `presentationDetents([.medium, .large])`；
+  - **视窗质感修饰 (`nemoSheetSurface`)**：原生系统拖拽把手（`.presentationDragIndicator(.visible)`）与 G2 连续顶部圆角（`presentationCornerRadius(24)`）；
+  - **标准导航容器包裹 (`nemoSheetContainer`)**：统一封装带内联标题与左上角标准关闭按钮的 `NavigationStack`。
+
+### 6. `NemoItemPickerSheet.swift` (通用原生抽屉单选面板)
+* **规范对齐**：100% 严格对齐 `Clash-Client`「配置中心」（`ClashProfilesView`）的 `standardProfileRow` 核心架构规范；
+* **通用抽象模型协议 (`NemoPickerItem`)**：
+  - `id: String`（唯一标识）
+  - `title: String`（主标题）
+  - `subtitle: String?`（副标题描述）
+  - `badge: String?`（胶囊徽章）
+* **核心排版特性**：
+  1. **左侧 24×24pt 绝对占位状态槽 (`statusSlot`)**：未选中项保持 24×24pt 透明占位（`Color.clear`），确保所有文本行严格垂直对齐；当前选中项显示系统主题色加粗对勾（`Image(systemName: "checkmark").font(.body.weight(.semibold))`）；
+  2. **中间文本区**：主标题文字自适应（选中项 Semibold 加粗）、轻量微胶囊徽章（`tertiarySystemFill` 连续圆角底衬）、副标题浅灰文字；
+  3. **右侧独立操作槽 (`trailingAction`)**：支持外挂 44×44pt 独立操作按钮（如发音人试听播放按钮），无障碍且点击互不干扰；
+  4. **全工程通用**：支持任何业务模块（如音色选择、题库选择、词典选择、规则切换等）标准化复用，杜绝各页面局部自行造轮子。
 
 ---
 

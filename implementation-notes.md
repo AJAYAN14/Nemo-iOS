@@ -85,9 +85,18 @@
      - 在 `NemoPressableButtonStyle.swift` 中通过 **`.sensoryFeedback(.impact(weight: .medium), trigger: configuration.isPressed)`** 和 `.sensoryFeedback(.impact(weight: .light), trigger: ...)` 接入系统触觉引擎；
      - 在 `ThemeSettingsView.swift` 中为主题色选择与应用图标切换接入 **`.sensoryFeedback(.selection, trigger: ...)`**，完全由 iOS 操作系统底层统一调度物理反馈。
 
-- **自动编译与 GitHub 仓库全链路交付**：
-  - 代码库已完全推送到 GitHub: `https://github.com/AJAYAN14/Nemo-iOS.git`；
-  - Release IPA 已构建完成并导出至 `E:\Nemo\Nemo.ipa`。
+- **配置中心同款通用抽屉弹窗架构落地（完全对齐开源项目 Clash-Client 规范）**：
+  - **架构决策与通用化**：
+    - 用户明确指出严禁在个别业务界面（如 `TtsSettingsView`）就地打补丁或手写花里胡哨的自定义卡片，必须将 `Clash-Client` 项目中「配置中心」（`ClashProfilesView`）的整套弹窗基建抽离沉淀到全局通用组件库中；
+    - 新增 `NemoSheetCloseButton.swift`：对齐 `ClashSheetCloseButton`，标准浅灰圆底加粗 `xmark` 关闭按钮（置于左上角 `cancellationAction`，符合 iOS 纯血原生体验）；
+    - 新增 `View+NemoModal.swift`：对齐 `clashModalPresentation`，适配 iOS 18+ `presentationSizing` 与向下兼容 iOS 16/17 `presentationDetents`、把手胶囊及 24pt 连续顶部圆角；
+    - 新增 `NemoItemPickerSheet.swift`：100% 对齐 Clash-Client「配置中心」`standardProfileRow` 规范的通用抽屉单选面板（定义 `NemoPickerItem` 协议，左侧 24×24pt 状态槽绝对占位对齐，中间主标题加粗与徽章，右侧外挂 44×44pt 独立操作槽 `trailingAction`，如行内试听播放按钮）；
+    - 全量重构 `TtsSettingsView.swift`：`SpeechVoiceOption` 严格遵循 `NemoPickerItem` 协议，所有手写局部组件彻底删除，完全接入通用 `NemoItemPickerSheet`。
+  - **Swift 6 与 Xcode 16 编译冲突排查与根治**：
+    - 现象：虚拟机构建首次运行输出 IPA 仅为 328 字节，排查发现由于项目开启 `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`，`NemoPickerItem` 协议原先继承了 `Sendable`，导致顶层结构体 `SpeechVoiceOption` 的 `Identifiable` 出现 `main actor-isolated conformance cannot satisfy Sendable type parameter` 编译报错；
+    - 修复：精简协议定义，去除冗余的 `Sendable` 约束，回归纯净 SwiftUI View 数据流，编译 0 警告 0 错误通过；
+  - **跨平台自动化构建流水线健全化**：
+    - 升级 `build_ios.ps1`，加入 `set -e` 严格错误中断机制，增加产物完整性与体积下限校验（低于 1MB 自动抓取 `/tmp/xcodebuild.log` 抛错），确保生成的 IPA 产物 100% 真实可用。构建产物 `E:\Nemo\Nemo.ipa` 恢复至约 9.06 MB。
 
 - **DocC 注释规范与纯血工程纯净性深度重构**：
   - **核心红线清零**：全面清除了所有 Swift 源码中违反 `nemorules.md` 第 6.2 条的元说明，包括“100% 对齐 Android HomeScreen.kt”、“状态对齐 Android uiState”、“对应 Android LearningSummaryCard”、“100% 复用 Clash-Client”等全部搬运溯源注释；

@@ -9,12 +9,18 @@ import SwiftUI
 import AVFoundation
 
 /// 语音发音人描述项
-public struct SpeechVoiceOption: Identifiable, Hashable {
+public struct SpeechVoiceOption: NemoPickerItem, Hashable {
     public let id: String
     public let name: String
     public let language: String
     public let displayName: String
     public let tags: String
+
+    public var title: String { name }
+    public var subtitle: String? {
+        language.lowercased().hasPrefix("ja") ? "日语 · 神经引擎合成" : "普通话 · 神经引擎合成"
+    }
+    public var badge: String? { tags.isEmpty ? nil : tags }
 
     public init(id: String, name: String, language: String, displayName: String, tags: String = "") {
         self.id = id
@@ -50,6 +56,8 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
     var isPlayingJapanese: Bool = false
     /// 是否正在试听中文
     var isPlayingChinese: Bool = false
+    /// 当前正在独立试听的发音人名称（用于抽屉内单行试听状态联动）
+    var previewingVoiceName: String? = nil
 
     override init() {
         super.init()
@@ -61,6 +69,46 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
         synthesizer.stopSpeaking(at: .immediate)
         isPlayingJapanese = false
         isPlayingChinese = false
+        previewingVoiceName = nil
+    }
+
+    /// 在抽屉中试听指定发音人
+    /// - Parameters:
+    ///   - name: 发音人代号
+    ///   - sampleText: 朗读例句
+    ///   - language: 语言代码前缀 (ja 或 zh)
+    ///   - rate: 语速倍率
+    ///   - pitch: 音调倍率
+    func previewVoice(
+        name: String,
+        sampleText: String,
+        language: String,
+        rate: Double,
+        pitch: Double
+    ) {
+        if previewingVoiceName == name {
+            stop()
+            return
+        }
+
+        stop()
+        previewingVoiceName = name
+
+        let utterance = AVSpeechUtterance(string: sampleText)
+        let defaultRate = AVSpeechUtteranceDefaultSpeechRate
+        utterance.rate = Float(min(max(rate * Double(defaultRate), Double(AVSpeechUtteranceMinimumSpeechRate)), Double(AVSpeechUtteranceMaximumSpeechRate)))
+        utterance.pitchMultiplier = Float(min(max(pitch, 0.5), 2.0))
+
+        if let voice = AVSpeechSynthesisVoice.speechVoices().first(where: {
+            $0.language.lowercased().hasPrefix(language.prefix(2).lowercased()) &&
+            ($0.name.localizedCaseInsensitiveContains(name) || $0.identifier.localizedCaseInsensitiveContains(name))
+        }) {
+            utterance.voice = voice
+        } else if let fallbackVoice = AVSpeechSynthesisVoice(language: language.hasPrefix("ja") ? "ja-JP" : "zh-CN") {
+            utterance.voice = fallbackVoice
+        }
+
+        synthesizer.speak(utterance)
     }
 
     /// 播放指定语言与发音人试听
@@ -110,6 +158,7 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
         Task { @MainActor in
             self.isPlayingJapanese = false
             self.isPlayingChinese = false
+            self.previewingVoiceName = nil
         }
     }
 
@@ -117,6 +166,7 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
         Task { @MainActor in
             self.isPlayingJapanese = false
             self.isPlayingChinese = false
+            self.previewingVoiceName = nil
         }
     }
 }
@@ -349,7 +399,9 @@ public struct TtsSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar)
         .animation(.spring(response: 0.38, dampingFraction: 0.82), value: isTabBarHidden)
-        .sheet(item: $activeVoiceSheet) { target in
+        .sheet(item: $activeVoiceSheet, onDismiss: {
+            previewManager.stop()
+        }) { target in
             voiceSelectionDrawerSheet(for: target)
         }
         .sensoryFeedback(.selection, trigger: hapticSelectionTrigger)
@@ -367,75 +419,54 @@ public struct TtsSettingsView: View {
         }
     }
 
-    // MARK: - 语音选择抽屉弹窗（iOS 原生 Bottom Sheet）
+    // MARK: - 语音选择抽屉弹窗（接入通用 NemoItemPickerSheet）
 
     @ViewBuilder
     private func voiceSelectionDrawerSheet(for target: TtsVoiceSheetTarget) -> some View {
         let voices = target == .japanese ? japaneseVoices : chineseVoices
         let currentSelectedName = target == .japanese ? selectedJapaneseVoice : selectedChineseVoice
+        let sampleText = target == .japanese ? sampleJapaneseText : sampleChineseText
 
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(voices, id: \.name) { voice in
-                        Button {
-                            if target == .japanese {
-                                selectedJapaneseVoice = voice.name
-                            } else {
-                                selectedChineseVoice = voice.name
-                            }
-                            hapticSelectionTrigger.toggle()
-                            activeVoiceSheet = nil
-                        } label: {
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(voice.name)
-                                        .font(.body.weight(.medium))
-                                        .foregroundStyle(.primary)
-
-                                    if !voice.tags.isEmpty {
-                                        Text(voice.tags)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-
-                                Spacer()
-
-                                if currentSelectedName == voice.name {
-                                    Image(systemName: "checkmark")
-                                        .font(.body.weight(.semibold))
-                                        .foregroundStyle(Color.accentColor)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
+        NemoItemPickerSheet(
+            title: target.title,
+            items: voices,
+            selectedID: currentSelectedName,
+            onSelect: { voice in
+                if target == .japanese {
+                    selectedJapaneseVoice = voice.name
+                } else {
+                    selectedChineseVoice = voice.name
                 }
-            }
-            .listStyle(.insetGrouped)
-            .navigationTitle(target.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        activeVoiceSheet = nil
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.secondary)
-                            .padding(7)
-                            .background(Circle().fill(Color(uiColor: .tertiarySystemFill)))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("关闭")
+                previewManager.stop()
+                hapticSelectionTrigger.toggle()
+                activeVoiceSheet = nil
+            },
+            onClose: {
+                previewManager.stop()
+                activeVoiceSheet = nil
+            },
+            trailingAction: { voice in
+                let isPreviewing = previewManager.previewingVoiceName == voice.name
+
+                Button {
+                    previewManager.previewVoice(
+                        name: voice.name,
+                        sampleText: sampleText,
+                        language: target.rawValue,
+                        rate: speechRate,
+                        pitch: speechPitch
+                    )
+                } label: {
+                    Image(systemName: isPreviewing ? "speaker.wave.3.fill" : "play.circle")
+                        .font(.title3)
+                        .foregroundStyle(isPreviewing ? Color.accentColor : Color.secondary)
+                        .frame(width: 44, height: 44, alignment: .trailing)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("试听 \(voice.name) 发音")
             }
-        }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
-        .presentationCornerRadius(24)
+        )
     }
 
     // MARK: - 发音人列表加载

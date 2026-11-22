@@ -125,7 +125,16 @@
          - 原生 `Button` 承载“试听日语发音”、“试听中文释义”与恢复默认设置；
       5. 严格采用 Apple DocC（`///`）纯净注释，杜绝任何外部元说明与自造轮子。
 
-  - **iOS 27 / 现代 iOS 品牌启动屏高保真实现（NemoSplashView）**：
+  - **语音发音人选择升级为 iOS 原生抽屉弹窗（Bottom Sheet）**：
+    - 针对上一版使用 `Picker(.navigationLink)` 跳转整个页面的割裂体验，按用户要求重构成 100% 苹果原生抽屉弹窗（`.sheet`）；
+    - **原生参数与材质**：
+      1. 采用 `.presentationDetents([.medium, .large])`，支持半屏抽屉与全屏拖拽展开；
+      2. 采用 `.presentationDragIndicator(.visible)`，呈现 iOS 标准系统拖拽把手胶囊；
+      3. 采用 `.presentationCornerRadius(24)`，圆润顺滑的 G2 连续顶部圆角；
+      4. 列表行采用双层排版（顶部发音人名称加粗，下方显示“女声 · 高保真”等属性标签），右侧显示苹果原生蓝色打钩标记（`checkmark`）；
+      5. 点击选项后自动持久化到 `@AppStorage`，触发系统触觉马达微反馈（`.sensoryFeedback(.selection, trigger: ...)`）并自动收起抽屉；
+      6. 导航栏顶部集成右上角标准“完成”按钮，符合 Apple HIG 弹窗确认交互准则。
+
     - **淘汰几年前老旧做法**：彻底摒弃静态图集（`LaunchImage` 废弃）、庞杂 Storyboard 历史包袱与主线程 `sleep` 恶习，拥抱现代 Xcode 自动生成冷启动屏与 SwiftUI 声明式动效接管；
     - **100% 视觉对齐 Android 真实蓝本**：
       1. **背景自适应**：浅色模式纯白（#FFFFFF），深色模式纯黑（#000000），与系统冷启动静态底色无缝像素级重合；

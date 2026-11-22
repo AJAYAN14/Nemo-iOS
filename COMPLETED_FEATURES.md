@@ -293,8 +293,8 @@ E:\Nemo\iOS\Nemo\
 
 ### 5. 语音设置（`TtsSettingsView.swift`）100% 苹果原生化重构
 * **严格落实“有原生的就用原生的，不要自己写”**：
-  - **零手写弹窗**：彻底废弃手写 Sheet 弹窗与自定义图标修饰，全面改用 Apple 原生 `Picker("选择日语语音", selection: $selectedJapaneseVoice).pickerStyle(.navigationLink)`；
-  - **原生 Push 单选页**：主页行右侧自动展示当前音色名称与灰色指示箭头，点击后系统自动 Push 进入原生单选页，选中项自动带有系统蓝色 Checkmark，原生支持手势滑动返回；
+  - **原生抽屉弹窗（Bottom Sheet）**：语音选择全面升级为 Apple 原生 `.sheet` 抽屉弹窗，配置 `.presentationDetents([.medium, .large])`、`.presentationDragIndicator(.visible)` 与 `.presentationCornerRadius(24)`；
+  - **优雅单选与触觉反馈**：抽屉内采用 Inset Grouped 列表排版，展示发音人姓名与“女声 · 高保真”等标签，右侧带有系统蓝色 Checkmark；点击即时保存并伴随系统触觉反馈（`.sensoryFeedback(.selection)`）后自动收起；
   - **动态系统音色**：基于原生 `AVSpeechSynthesisVoice.speechVoices()` 自动过滤并列举本地神经引擎已安装的发音人（Kyoko、Otoya、Siri、婷婷等）；
 * **Apple 官方标志性语速滑块**：
   - 语速滑块两端接入 Apple 官方标准的乌龟（`Image(systemName: "tortoise.fill")`）与兔子（`Image(systemName: "hare.fill")`）辅助图标；

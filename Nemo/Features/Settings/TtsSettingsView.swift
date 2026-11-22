@@ -14,12 +14,29 @@ public struct SpeechVoiceOption: Identifiable, Hashable {
     public let name: String
     public let language: String
     public let displayName: String
+    public let tags: String
 
-    public init(id: String, name: String, language: String, displayName: String) {
+    public init(id: String, name: String, language: String, displayName: String, tags: String = "") {
         self.id = id
         self.name = name
         self.language = language
         self.displayName = displayName
+        self.tags = tags
+    }
+}
+
+/// 抽屉弹窗选择目标语言枚举
+public enum TtsVoiceSheetTarget: String, Identifiable {
+    case japanese = "ja"
+    case chinese = "zh"
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .japanese: return "选择日语发音人"
+        case .chinese: return "选择中文发音人"
+        }
     }
 }
 
@@ -120,6 +137,18 @@ public struct TtsSettingsView: View {
     @State private var isTabBarHidden: Bool = false
     @State private var japaneseVoices: [SpeechVoiceOption] = []
     @State private var chineseVoices: [SpeechVoiceOption] = []
+    @State private var activeVoiceSheet: TtsVoiceSheetTarget? = nil
+    @State private var hapticSelectionTrigger: Bool = false
+
+    /// 当前选中的日语音色显示名称
+    private var selectedJapaneseVoiceDisplayName: String {
+        japaneseVoices.first(where: { $0.name == selectedJapaneseVoice })?.displayName ?? selectedJapaneseVoice
+    }
+
+    /// 当前选中的中语音色显示名称
+    private var selectedChineseVoiceDisplayName: String {
+        chineseVoices.first(where: { $0.name == selectedChineseVoice })?.displayName ?? selectedChineseVoice
+    }
 
     // MARK: - 试听例句
     private let sampleJapaneseText = "こんにちは、Nemoへようこそ。一緒に日本語を勉強しましょう！"
@@ -129,21 +158,45 @@ public struct TtsSettingsView: View {
 
     public var body: some View {
         List {
-            // MARK: - 1. 语音来源
+            // MARK: - 1. 语音来源（抽屉弹窗选择）
             Section {
-                Picker("选择日语语音", selection: $selectedJapaneseVoice) {
-                    ForEach(japaneseVoices, id: \.name) { voice in
-                        Text(voice.displayName).tag(voice.name)
-                    }
-                }
-                .pickerStyle(.navigationLink)
+                Button {
+                    activeVoiceSheet = .japanese
+                } label: {
+                    HStack {
+                        Text("日语发音人")
+                            .foregroundStyle(.primary)
 
-                Picker("选择中文语音", selection: $selectedChineseVoice) {
-                    ForEach(chineseVoices, id: \.name) { voice in
-                        Text(voice.displayName).tag(voice.name)
+                        Spacer()
+
+                        Text(selectedJapaneseVoiceDisplayName)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
                 }
-                .pickerStyle(.navigationLink)
+
+                Button {
+                    activeVoiceSheet = .chinese
+                } label: {
+                    HStack {
+                        Text("中文发音人")
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+
+                        Text(selectedChineseVoiceDisplayName)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
             } header: {
                 NemoSectionHeader("语音来源")
             } footer: {
@@ -296,6 +349,10 @@ public struct TtsSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar)
         .animation(.spring(response: 0.38, dampingFraction: 0.82), value: isTabBarHidden)
+        .sheet(item: $activeVoiceSheet) { target in
+            voiceSelectionDrawerSheet(for: target)
+        }
+        .sensoryFeedback(.selection, trigger: hapticSelectionTrigger)
         .onAppear {
             loadAvailableVoices()
             withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
@@ -310,6 +367,74 @@ public struct TtsSettingsView: View {
         }
     }
 
+    // MARK: - 语音选择抽屉弹窗（iOS 原生 Bottom Sheet）
+
+    @ViewBuilder
+    private func voiceSelectionDrawerSheet(for target: TtsVoiceSheetTarget) -> some View {
+        let voices = target == .japanese ? japaneseVoices : chineseVoices
+        let currentSelectedName = target == .japanese ? selectedJapaneseVoice : selectedChineseVoice
+
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(voices, id: \.name) { voice in
+                        Button {
+                            if target == .japanese {
+                                selectedJapaneseVoice = voice.name
+                            } else {
+                                selectedChineseVoice = voice.name
+                            }
+                            hapticSelectionTrigger.toggle()
+                            activeVoiceSheet = nil
+                        } label: {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(voice.name)
+                                        .font(.body.weight(.medium))
+                                        .foregroundStyle(.primary)
+
+                                    if !voice.tags.isEmpty {
+                                        Text(voice.tags)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+
+                                Spacer()
+
+                                if currentSelectedName == voice.name {
+                                    Image(systemName: "checkmark")
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(Color.accentColor)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } footer: {
+                    Text(target == .japanese
+                         ? "支持系统的原生日语音频库，优先选用高保真发音人，音质更加真实自然。"
+                         : "支持系统的原生中文音频库，包含标准普通话与特色发音。")
+                }
+            }
+            .listStyle(.insetGrouped)
+            .navigationTitle(target.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") {
+                        activeVoiceSheet = nil
+                    }
+                    .font(.body.weight(.semibold))
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(24)
+    }
+
     // MARK: - 发音人列表加载
 
     private func loadAvailableVoices() {
@@ -321,14 +446,14 @@ public struct TtsSettingsView: View {
             let quality = voice.quality == .enhanced ? "高保真" : (voice.quality == .premium ? "超清" : "")
             let tags = [gender, quality].filter { !$0.isEmpty }.joined(separator: " · ")
             let display = tags.isEmpty ? voice.name : "\(voice.name) (\(tags))"
-            return SpeechVoiceOption(id: voice.identifier, name: voice.name, language: voice.language, displayName: display)
+            return SpeechVoiceOption(id: voice.identifier, name: voice.name, language: voice.language, displayName: display, tags: tags)
         }
 
         if jaList.isEmpty {
             jaList = [
-                SpeechVoiceOption(id: "com.apple.voice.compact.ja-JP.Kyoko", name: "Kyoko", language: "ja-JP", displayName: "Kyoko (系统默认 · 女声)"),
-                SpeechVoiceOption(id: "com.apple.voice.compact.ja-JP.Otoya", name: "Otoya", language: "ja-JP", displayName: "Otoya (男声)"),
-                SpeechVoiceOption(id: "com.apple.ttsbundle.siri_ja-JP", name: "Siri", language: "ja-JP", displayName: "Siri (官方音声)")
+                SpeechVoiceOption(id: "com.apple.voice.compact.ja-JP.Kyoko", name: "Kyoko", language: "ja-JP", displayName: "Kyoko (系统默认 · 女声)", tags: "系统默认 · 女声"),
+                SpeechVoiceOption(id: "com.apple.voice.compact.ja-JP.Otoya", name: "Otoya", language: "ja-JP", displayName: "Otoya (男声)", tags: "男声"),
+                SpeechVoiceOption(id: "com.apple.ttsbundle.siri_ja-JP", name: "Siri", language: "ja-JP", displayName: "Siri (官方音声)", tags: "官方音声")
             ]
         }
 
@@ -338,14 +463,14 @@ public struct TtsSettingsView: View {
             let quality = voice.quality == .enhanced ? "高保真" : (voice.quality == .premium ? "超清" : "")
             let tags = [gender, quality].filter { !$0.isEmpty }.joined(separator: " · ")
             let display = tags.isEmpty ? voice.name : "\(voice.name) (\(tags))"
-            return SpeechVoiceOption(id: voice.identifier, name: voice.name, language: voice.language, displayName: display)
+            return SpeechVoiceOption(id: voice.identifier, name: voice.name, language: voice.language, displayName: display, tags: tags)
         }
 
         if zhList.isEmpty {
             zhList = [
-                SpeechVoiceOption(id: "com.apple.voice.compact.zh-CN.Tingting", name: "Tingting", language: "zh-CN", displayName: "婷婷 (普通话 · 女声)"),
-                SpeechVoiceOption(id: "com.apple.voice.compact.zh-CN.Yu-shu", name: "Yu-shu", language: "zh-CN", displayName: "玉舒 (高保真 · 女声)"),
-                SpeechVoiceOption(id: "com.apple.ttsbundle.siri_zh-CN", name: "Siri", language: "zh-CN", displayName: "Siri (官方音声)")
+                SpeechVoiceOption(id: "com.apple.voice.compact.zh-CN.Tingting", name: "Tingting", language: "zh-CN", displayName: "婷婷 (普通话 · 女声)", tags: "普通话 · 女声"),
+                SpeechVoiceOption(id: "com.apple.voice.compact.zh-CN.Yu-shu", name: "Yu-shu", language: "zh-CN", displayName: "玉舒 (高保真 · 女声)", tags: "高保真 · 女声"),
+                SpeechVoiceOption(id: "com.apple.ttsbundle.siri_zh-CN", name: "Siri", language: "zh-CN", displayName: "Siri (官方音声)", tags: "官方音声")
             ]
         }
 

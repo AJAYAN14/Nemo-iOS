@@ -25,7 +25,7 @@ public protocol NemoPickerItem: Identifiable {
 /// 1. 左侧 24x24pt 绝对占位状态槽：未选中项透明占位对齐，当前选中项展示系统主题色加粗 checkmark；
 /// 2. 中间信息区：选项主标题（选中项 semibold 加粗）+ 微胶囊徽章 + 辅助描述副文本；
 /// 3. 右侧独立操作槽：支持外挂 44x44pt 独立无冲突操作按钮（如行内试听播放按钮）；
-/// 4. 纯血苹果原生 Inset Grouped List 布局与透明穿透导航栏。
+/// 4. 纯血苹果原生 Inset Grouped List 布局与标准导航栏系统呈现。
 public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: View {
     private let title: String
     private let items: [Item]
@@ -76,7 +76,6 @@ public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: V
                     NemoSheetCloseButton(dismiss: onClose)
                 }
             }
-            .nemoTransparentNavigationBar()
         }
         .nemoModalPresentation(.page)
         .nemoSheetSurface()

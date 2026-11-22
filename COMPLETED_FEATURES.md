@@ -241,9 +241,9 @@ E:\Nemo\iOS\Nemo\
   - **iOS 18+ 规范**：使用原生 `presentationSizing(.page / .form / .fitted)`；
   - **向下兼容 (iOS 16/17)**：保持系统标准原生全屏 Page Sheet 卡片模态，不强加半高阻断；
   - **视窗质感修饰 (`nemoSheetSurface`)**：彻底隐藏顶部拖拽把手横杠（`.presentationDragIndicator(.hidden)`），彻底移除人工硬编码圆角（淘汰 `presentationCornerRadius(24)`），100% 继承当前 iPhone 物理硬件屏幕曲率计算出的苹果官方同心大圆角；
-  - **内联标题与表单紧凑间距**：集成 `nemoInlinePageTitle()`（iOS 17+ `toolbarTitleDisplayMode(.inline)`）与 `nemoConfigurationFormSpacing()`（`.contentMargins(.top, 4, for: .scrollContent)` 与 `.listSectionSpacing(16)`），使首个分组卡片与导航栏紧凑咬合；
-  - **滚动全透明穿透 (`nemoTransparentNavigationBar`)**：采用 SwiftUI `.toolbarBackground(.hidden, for: .navigationBar)` 搭配底座外观辅助器（`NemoTransparentNavBarHelper`），在当前控制器生命周期内强制将 `standardAppearance`、`scrollEdgeAppearance` 与 `compactAppearance` 的背景磨砂材质（`backgroundEffect = nil`）与下边缘细线（`shadowColor = .clear`）彻底置空，彻底杜绝列表向上滑动时系统默认激活的毛玻璃材质遮罩（Material Blur），使关闭按钮和整条顶部导航栏在任何滚动位移下均保持极致透明穿透；
-  - **标准导航容器包裹 (`nemoSheetContainer`)**：统一封装带内联标题与左上角标准关闭按钮的 `NavigationStack`。
+  - **内联标题与表单间距**：集成 `nemoInlinePageTitle()`（iOS 17+ `toolbarTitleDisplayMode(.inline)`）与 `nemoConfigurationFormSpacing()`（`listSectionSpacing(16)`），使分组卡片与导航栏节奏自然；
+  - **苹果原生系统级渲染**：移除所有人工透明化 Hack，全量交付给 iOS 原生系统渲染引擎，向上滑动时自然过渡到原生 Material 材质；
+  - **标准导航容器包裹 (`nemoSheetContainer`)**：统一封装带内联标题与左上角原生取消按钮的 `NavigationStack`。
 
 ### 6. `NemoItemPickerSheet.swift` (通用原生抽屉单选面板)
 * **规范对齐**：100% 严格对齐 `Clash-Client`「配置中心」（`ClashProfilesView`）的 `standardProfileRow` 核心架构规范；

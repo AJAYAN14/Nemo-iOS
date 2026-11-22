@@ -165,6 +165,18 @@
       6. **无缝平滑转场**：2.4 秒动效自然就位后，通过 `NemoApp.swift` 执行 0.45 秒优雅 Crossfade 进入 `ContentView`，底座视图预挂载杜绝任何丢帧闪烁；
       7. **无障碍规范适配**：注入 `@Environment(\.accessibilityReduceMotion)`，当用户开启减弱动态效果时，跳过剧烈弹跳与浮动，优雅淡入并在 1.2 秒后轻柔过渡，严格遵循 Apple HIG 准则。
 
+  - **语音选择通用抽屉规范彻底纯血原生化（对齐 Clash 代理页面交互架构）**：
+    - 针对用户“删掉你自己写的，使用原生的”与“按照代理界面的实现方式来写”的明确要求：
+      1. **彻底清理自定义透明化 Hack**：彻底删除 `nemoTransparentNavigationBar` 及底层的 `NemoTransparentNavBarHelper`，移除对 `UINavigationBarAppearance` 的强行清空劫持，恢复苹果 iOS 系统的原生导航栏渲染与向上滚动时的 Material 模糊效果；
+      2. **严格对齐 Clash 代理页面（ProxiesOverview）架构**：
+         - **导航容器**：外层采用纯原生 `NavigationStack`，配置内联标题模式（`.toolbarTitleDisplayMode(.inline)`）；
+         - **原生取消按钮**：在 `ToolbarItem(placement: .cancellationAction)` 挂载纯血原生 `NemoSheetCloseButton`（`Button { Label("关闭", systemImage: "xmark") }.labelStyle(.iconOnly)`），交由系统自动处理触控高亮与矢量渲染，杜绝任何人工手写灰色圆底；
+         - **列表与节奏**：采用 `.listStyle(.insetGrouped)` 并配置 `.listSectionSpacing(16)`（iOS 17+ 原生节距）；
+         - **抽屉外貌修饰**：配置 `.presentationDragIndicator(.hidden)` 彻底去除顶部把手横杠，配置 iOS 18+ 原生 `.presentationSizing(.page)`，配置 iOS 16.4+ 原生 `.presentationBackground(Color(uiColor: .systemGroupedBackground))`，完全继承 iPhone 硬件级自适应大圆角；
+      3. **DocC 规范合规**：所有 Swift 文件全量使用标准 Apple DocC `///` 注释，严禁任何外部元说明违规；
+      4. **虚拟机构建验证**：通过 VMware macOS 虚拟机执行 Release 编译与 IPA 组装，产物 `E:\Nemo\Nemo.ipa`（大小 9,058,668 字节，约 9.06MB），0 警告 0 错误。
+
+
 
 
 

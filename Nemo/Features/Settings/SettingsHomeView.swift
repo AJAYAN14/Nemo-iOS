@@ -312,6 +312,7 @@ public struct SettingsHomeView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .nemoTopAppBarEffect()
         .navigationTitle("个人")
         .navigationBarTitleDisplayMode(.large)
     }

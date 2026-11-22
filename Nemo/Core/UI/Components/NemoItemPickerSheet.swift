@@ -69,6 +69,7 @@ public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: V
             }
             .listStyle(.insetGrouped)
             .nemoConfigurationFormSpacing()
+            .nemoTopAppBarEffect()
             .navigationTitle(title)
             .nemoInlinePageTitle()
             .toolbar {

@@ -429,6 +429,7 @@ public struct ThemeSettingsView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .nemoTopAppBarEffect()
         .navigationTitle("主题与外观")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar)

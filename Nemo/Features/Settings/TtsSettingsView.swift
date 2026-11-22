@@ -422,6 +422,7 @@ public struct TtsSettingsView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .nemoTopAppBarEffect()
         .navigationTitle("语音设置")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar)

@@ -39,6 +39,7 @@ public struct TestHomeView: View {
             .padding(.vertical, 12)
         }
         .background(Color.nemoGroupedBackground)
+        .nemoTopAppBarEffect()
         .navigationTitle("测试")
         .navigationBarTitleDisplayMode(.large)
     }

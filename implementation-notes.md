@@ -189,6 +189,17 @@
       3. 彻底突破系统默认的 `ambient` 静音限制，在 iPhone 开启硬件静音开关或 Action Button 静音时依然清晰正常发音；
       4. 虚拟机 Release 成功打包构建真实 IPA（9,059,221 字节，时间 14:19:09）。
 
+  - **顶部 AppBar 渐变过渡模糊遮罩原生适配（Liquid Glass / scrollEdgeEffectStyle）**：
+    - 调研与技术选型：
+      - 针对用户“调查一下 ios26/27 有没有引入那个顶部 appbar 使用的渐变过渡的模糊遮罩”的需求，确认 Apple 已在 WWDC25（iOS 26+）伴随全新的 **Liquid Glass** 材质设计语言正式推出公有 API `ScrollEdgeEffectStyle` 与 `.scrollEdgeEffectStyle(_:for:)`；
+      - 彻底告别以往依赖私有 `CAFilter("variableBlur")` 反编译黑魔法或 CoreImage 离屏渲染性能瓶颈；
+      - 采用 **方案一（原生优雅降级）**：iOS 26+ 启用原生 `.scrollEdgeEffectStyle(.soft, for: .top)` 呈现柔和渐变羽化毛玻璃，低版本（iOS 17~25）优雅降级维持系统标准外观。
+    - DRY 通用化工程落地：
+      - 在 `View+NemoStyles.swift` 中新增通用修饰符 `nemoTopAppBarEffect()`，使用标准 Apple DocC 注释；
+      - 全量挂载至所有包含顶部导航栏/AppBar 的滚动容器：`ProgressHomeView`（进度）、`TestHomeView`（测试）、`SettingsHomeView`（设置）、`ThemeSettingsView`（主题与外观）、`TtsSettingsView`（语音设置）以及 `NemoItemPickerSheet`（通用抽屉单选列表）；
+      - 主页 `LearningHomeView` 保持 `.toolbar(.hidden, for: .navigationBar)` 独立自定义问候栏，职责清晰。
+
+
 
 
 

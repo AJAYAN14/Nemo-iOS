@@ -40,6 +40,7 @@ public struct ProgressHomeView: View {
             .padding(.vertical, 12)
         }
         .background(Color.nemoGroupedBackground)
+        .nemoTopAppBarEffect()
         .navigationTitle("进度")
         .navigationBarTitleDisplayMode(.large)
     }

@@ -201,8 +201,8 @@ public struct TtsSettingsView: View {
     }
 
     // MARK: - 试听例句
-    private let sampleJapaneseText = "こんにちは、Nemoへようこそ。一緒に日本語を勉強しましょう！"
-    private let sampleChineseText = "你好，欢迎使用 Nemo 日语，一起开启高效学习之旅！"
+    private let sampleJapaneseText = "これは音声テストです。"
+    private let sampleChineseText = "这是中文语音测试。"
 
     public init() {}
 

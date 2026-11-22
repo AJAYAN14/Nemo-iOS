@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-/// 原生标准抽屉圆底关闭按钮（严格对齐 Clash 客户端规范）
+/// 抽屉弹窗关闭按钮（100% 严格对齐 Clash 客户端 ClashSheetCloseButton 规范）
 ///
-/// 遵循 iOS 原生视觉规范，采用带有系统三级填充色的圆形背景（tertiarySystemFill），
-/// 内嵌加粗 xmark 符号，提供 44pt 最小无障碍触控目标尺寸。
+/// 遵循苹果原生 NavigationBar 规范，采用纯血原生 Label 图标按钮，
+/// 交由系统自动处理触控高亮反馈、原生图标渲染与无障碍标签，杜绝任何人工手写背景圆圈。
 public struct NemoSheetCloseButton: View {
     private let dismiss: () -> Void
 
@@ -22,13 +22,9 @@ public struct NemoSheetCloseButton: View {
 
     public var body: some View {
         Button(action: dismiss) {
-            Image(systemName: "xmark")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(.secondary)
-                .padding(7)
-                .background(Circle().fill(Color(uiColor: .tertiarySystemFill)))
+            Label("关闭", systemImage: "xmark")
         }
-        .buttonStyle(.plain)
+        .labelStyle(.iconOnly)
         .accessibilityLabel("关闭")
     }
 }

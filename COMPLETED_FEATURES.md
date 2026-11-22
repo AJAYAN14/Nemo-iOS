@@ -227,12 +227,12 @@ E:\Nemo\iOS\Nemo\
   - 卡片抬升层：`Color.nemoSecondaryGroupedBackground`（浅色 `#FFFFFF`，深色 `#1C1C1E` 标准抬升层）；
   - 跨平台支持：iOS 环境自动映射 UIKit 语义色，Mac 环境映射 AppKit 语义色，彻底杜绝 Xcode 预览与不同目标设备编译报错。
 
-### 4. `NemoSheetCloseButton.swift` (原生标准抽屉圆底关闭按钮)
+### 4. `NemoSheetCloseButton.swift` (原生标准抽屉关闭按钮)
 * **规范对齐**：100% 严格对齐开源项目 `Clash-Client` 的 `ClashSheetCloseButton` 规范；
 * **视觉与交互规格**：
-  - 图标：系统加粗 xmark（`Image(systemName: "xmark").font(.system(size: 13, weight: .bold))`）；
-  - 衬底：标准浅灰色圆形背景（`Circle().fill(Color(uiColor: .tertiarySystemFill))`），内边距 7pt；
-  - 触控无障碍：44×44pt 最小无障碍触控目标尺寸，配置 `.accessibilityLabel("关闭")`；
+  - 纯正原生 Label 图标：`Button { Label("关闭", systemImage: "xmark") }.labelStyle(.iconOnly)`；
+  - 彻底淘汰手绘灰色圆底（`Circle().fill`）与硬编码边距，交由苹果原生 NavigationBar 统一托管触控高亮与对齐；
+  - 触控无障碍：系统标准导航栏触控尺寸，配置 `.accessibilityLabel("关闭")`；
   - 位置规范：置于导航栏左上角（`placement: .cancellationAction`）。
 
 ### 5. `View+NemoModal.swift` (统一抽屉模态与视窗修饰扩展)
@@ -240,7 +240,8 @@ E:\Nemo\iOS\Nemo\
 * **全生命周期自适应**：
   - **iOS 18+ 规范**：使用原生 `presentationSizing(.page / .form / .fitted)`；
   - **向下兼容 (iOS 16/17)**：保持系统标准原生全屏 Page Sheet 卡片模态，不强加半高阻断；
-  - **视窗质感修饰 (`nemoSheetSurface`)**：彻底隐藏顶部拖拽把手横杠（`.presentationDragIndicator(.hidden)`），搭配 G2 连续顶部圆角（`presentationCornerRadius(24)`），实现极致纯净视觉；
+  - **视窗质感修饰 (`nemoSheetSurface`)**：彻底隐藏顶部拖拽把手横杠（`.presentationDragIndicator(.hidden)`），彻底移除人工硬编码圆角（淘汰 `presentationCornerRadius(24)`），100% 继承当前 iPhone 物理硬件屏幕曲率计算出的苹果官方同心大圆角；
+  - **内联标题与表单紧凑间距**：集成 `nemoInlinePageTitle()`（iOS 17+ `toolbarTitleDisplayMode(.inline)`）与 `nemoConfigurationFormSpacing()`（`.contentMargins(.top, 4, for: .scrollContent)` 与 `.listSectionSpacing(16)`），使首个分组卡片与导航栏紧凑咬合；
   - **标准导航容器包裹 (`nemoSheetContainer`)**：统一封装带内联标题与左上角标准关闭按钮的 `NavigationStack`。
 
 ### 6. `NemoItemPickerSheet.swift` (通用原生抽屉单选面板)

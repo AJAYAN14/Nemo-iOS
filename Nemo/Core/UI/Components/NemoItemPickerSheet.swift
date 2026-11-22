@@ -68,8 +68,9 @@ public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: V
                 }
             }
             .listStyle(.insetGrouped)
+            .nemoConfigurationFormSpacing()
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .nemoInlinePageTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     NemoSheetCloseButton(dismiss: onClose)

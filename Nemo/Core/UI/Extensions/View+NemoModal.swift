@@ -37,20 +37,13 @@ public extension View {
         }
     }
 
-    /// 标准抽屉视窗外观修饰（严格对齐 Clash 规范，彻底隐藏顶部拖拽横杠）
+    /// 标准抽屉视窗外观修饰（严格对齐 Clash 规范）
     ///
-    /// 包含隐藏系统拖拽横杠胶囊、连续曲率圆角与背景适配。
-    /// - Parameter cornerRadius: 抽屉顶部圆角半径，默认 24pt
+    /// 隐藏顶部拖拽横杠，完全继承苹果原生 Sheet 系统自适应硬件大圆角，严禁人工写死固定圆角。
     @ViewBuilder
-    func nemoSheetSurface(cornerRadius: CGFloat = 24) -> some View {
-        if #available(iOS 16.4, *) {
-            self
-                .presentationDragIndicator(.hidden)
-                .presentationCornerRadius(cornerRadius)
-        } else {
-            self
-                .presentationDragIndicator(.hidden)
-        }
+    func nemoSheetSurface() -> some View {
+        self
+            .presentationDragIndicator(.hidden)
     }
 
     /// 统一标准抽屉导航容器包裹
@@ -61,7 +54,7 @@ public extension View {
         NavigationStack {
             self
                 .navigationTitle(title)
-                .navigationBarTitleDisplayMode(.inline)
+                .nemoInlinePageTitle()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         NemoSheetCloseButton(dismiss: onClose)
@@ -70,5 +63,26 @@ public extension View {
         }
         .nemoModalPresentation(.page)
         .nemoSheetSurface()
+    }
+
+    /// 内联标题修饰符（对齐 Clash 的 ClashInlinePageTitle 规范）
+    @ViewBuilder
+    func nemoInlinePageTitle() -> some View {
+        if #available(iOS 17.0, *) {
+            self.toolbarTitleDisplayMode(.inline)
+        } else {
+            self.navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    /// 表单顶部紧凑边距修饰符（对齐 Clash 的 clashConfigurationFormSpacing 规范）
+    @ViewBuilder
+    func nemoConfigurationFormSpacing() -> some View {
+        if #available(iOS 17.0, *) {
+            self.listSectionSpacing(16)
+                .contentMargins(.top, 4, for: .scrollContent)
+        } else {
+            self
+        }
     }
 }

@@ -18,9 +18,9 @@ public enum NemoModalRole: Sendable {
 }
 
 public extension View {
-    /// 统一抽屉弹窗自适应 Presentation 规范
+    /// 统一抽屉弹窗自适应 Presentation 规范（严格对齐 Clash 客户端规范）
     ///
-    /// 对齐现代 iOS 18+ 原生 presentationSizing，向下兼容至 iOS 16/17 presentationDetents。
+    /// 对齐现代 iOS 18+ 原生 presentationSizing，非 iOS 18 保持系统原生全屏 Page Sheet 卡片。
     @ViewBuilder
     func nemoModalPresentation(_ role: NemoModalRole = .page) -> some View {
         if #available(iOS 18.0, *) {
@@ -33,30 +33,23 @@ public extension View {
                 self.presentationSizing(.fitted)
             }
         } else {
-            switch role {
-            case .page:
-                self.presentationDetents([.medium, .large])
-            case .form:
-                self.presentationDetents([.medium])
-            case .fitted:
-                self.presentationDetents([.fraction(0.4), .medium])
-            }
+            self
         }
     }
 
-    /// 标准抽屉视窗外观修饰
+    /// 标准抽屉视窗外观修饰（严格对齐 Clash 规范，彻底隐藏顶部拖拽横杠）
     ///
-    /// 包含系统把手胶囊、连续曲率圆角与背景适配。
+    /// 包含隐藏系统拖拽横杠胶囊、连续曲率圆角与背景适配。
     /// - Parameter cornerRadius: 抽屉顶部圆角半径，默认 24pt
     @ViewBuilder
     func nemoSheetSurface(cornerRadius: CGFloat = 24) -> some View {
         if #available(iOS 16.4, *) {
             self
-                .presentationDragIndicator(.visible)
+                .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(cornerRadius)
         } else {
             self
-                .presentationDragIndicator(.visible)
+                .presentationDragIndicator(.hidden)
         }
     }
 

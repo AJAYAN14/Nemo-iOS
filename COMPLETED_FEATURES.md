@@ -239,8 +239,8 @@ E:\Nemo\iOS\Nemo\
 * **规范对齐**：对齐 `Clash-Client` 的 `clashModalPresentation` 统一多端自适应模态引擎；
 * **全生命周期自适应**：
   - **iOS 18+ 规范**：使用原生 `presentationSizing(.page / .form / .fitted)`；
-  - **向下兼容 (iOS 16/17)**：自适应降级为 `presentationDetents([.medium, .large])`；
-  - **视窗质感修饰 (`nemoSheetSurface`)**：原生系统拖拽把手（`.presentationDragIndicator(.visible)`）与 G2 连续顶部圆角（`presentationCornerRadius(24)`）；
+  - **向下兼容 (iOS 16/17)**：保持系统标准原生全屏 Page Sheet 卡片模态，不强加半高阻断；
+  - **视窗质感修饰 (`nemoSheetSurface`)**：彻底隐藏顶部拖拽把手横杠（`.presentationDragIndicator(.hidden)`），搭配 G2 连续顶部圆角（`presentationCornerRadius(24)`），实现极致纯净视觉；
   - **标准导航容器包裹 (`nemoSheetContainer`)**：统一封装带内联标题与左上角标准关闭按钮的 `NavigationStack`。
 
 ### 6. `NemoItemPickerSheet.swift` (通用原生抽屉单选面板)

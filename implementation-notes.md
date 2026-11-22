@@ -95,6 +95,10 @@
   - **Swift 6 与 Xcode 16 编译冲突排查与根治**：
     - 现象：虚拟机构建首次运行输出 IPA 仅为 328 字节，排查发现由于项目开启 `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`，`NemoPickerItem` 协议原先继承了 `Sendable`，导致顶层结构体 `SpeechVoiceOption` 的 `Identifiable` 出现 `main actor-isolated conformance cannot satisfy Sendable type parameter` 编译报错；
     - 修复：精简协议定义，去除冗余的 `Sendable` 约束，回归纯净 SwiftUI View 数据流，编译 0 警告 0 错误通过；
+  - **彻底清除抽屉弹窗顶部拖拽横杠（100% 对齐 Clash 纯净卡片视觉）**：
+    - 深入对比 `Clash-Client` 底层 `ClashSingleColumnPresentation.swift` 源码发现，Clash 采用标准的 Page Sheet 模态，根本没有设置半屏抽屉的拖拽指示器；
+    - 针对上一版在 `View+NemoModal.swift` 中强制启用了 `.presentationDragIndicator(.visible)` 以及中等高度 `.presentationDetents([.medium, ...])` 导致系统强行绘制灰色把手横杠的问题，将其彻底移除并显式配置 `.presentationDragIndicator(.hidden)`；
+    - 弹窗顶部恢复为 100% 纯净原生卡片，与 Clash 客户端配置中心视觉完全一致。
   - **跨平台自动化构建流水线健全化**：
     - 升级 `build_ios.ps1`，加入 `set -e` 严格错误中断机制，增加产物完整性与体积下限校验（低于 1MB 自动抓取 `/tmp/xcodebuild.log` 抛错），确保生成的 IPA 产物 100% 真实可用。构建产物 `E:\Nemo\Nemo.ipa` 恢复至约 9.06 MB。
 

@@ -182,6 +182,14 @@
     - 联动语音设置主页面试听按钮与抽屉每一行发音人的行内试听播放按钮，完全保持跨平台标准文案统一；
     - 虚拟机 Release 成功打包构建真实 IPA（9,058,584 字节，时间 14:13:33）。
 
+  - **支持物理静音模式下正常发声朗读（AVAudioSession.Category.playback）**：
+    - 针对用户“静音的时候能有声音吗”的需求：
+      1. 在 `TtsPreviewManager` 中配置 `AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])`；
+      2. 播发前动态激活会话（`setActive(true)`），播发完毕（`didFinish` / `didCancel` / `stop`）时优雅释放（`setActive(false, options: .notifyOthersOnDeactivation)`）；
+      3. 彻底突破系统默认的 `ambient` 静音限制，在 iPhone 开启硬件静音开关或 Action Button 静音时依然清晰正常发音；
+      4. 虚拟机 Release 成功打包构建真实 IPA（9,059,221 字节，时间 14:19:09）。
+
+
 
 
 

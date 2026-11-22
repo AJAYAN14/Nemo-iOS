@@ -70,6 +70,29 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
         isPlayingJapanese = false
         isPlayingChinese = false
         previewingVoiceName = nil
+        deactivateAudioSession()
+    }
+
+    /// 配置并激活音频播放会话
+    ///
+    /// 将音频会话类别设为播放模式，确保设备处于物理静音状态下仍能正常播发试听语音。
+    private func prepareAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+            try session.setActive(true)
+        } catch {
+            // 忽略非关键音频会话配置异常，确保语音任务正常流转
+        }
+    }
+
+    /// 释放音频会话占用
+    private func deactivateAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            // 忽略清理阶段异常
+        }
     }
 
     /// 在抽屉中试听指定发音人
@@ -108,6 +131,7 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
             utterance.voice = fallbackVoice
         }
 
+        prepareAudioSession()
         synthesizer.speak(utterance)
     }
 
@@ -149,6 +173,7 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
             isPlayingChinese = true
         }
 
+        prepareAudioSession()
         synthesizer.speak(utterance)
     }
 
@@ -159,6 +184,7 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
             self.isPlayingJapanese = false
             self.isPlayingChinese = false
             self.previewingVoiceName = nil
+            self.deactivateAudioSession()
         }
     }
 
@@ -167,6 +193,7 @@ final class TtsPreviewManager: NSObject, AVSpeechSynthesizerDelegate {
             self.isPlayingJapanese = false
             self.isPlayingChinese = false
             self.previewingVoiceName = nil
+            self.deactivateAudioSession()
         }
     }
 }

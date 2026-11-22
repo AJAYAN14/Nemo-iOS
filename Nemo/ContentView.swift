@@ -4,19 +4,21 @@
 //
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
-/// 顶层导航 Tab 类型安全枚举
+/// 顶层导航栏标签项类型枚举
 public enum AppTab: String, Hashable, CaseIterable, Identifiable {
+    /// 学习主页
     case learning
+    /// 进度分析
     case progress
+    /// 能力测试
     case test
+    /// 个人中心与设置
     case settings
 
     public var id: String { rawValue }
 
+    /// 标签项本地化显示标题
     public var title: String {
         switch self {
         case .learning:
@@ -30,6 +32,7 @@ public enum AppTab: String, Hashable, CaseIterable, Identifiable {
         }
     }
 
+    /// 标签项对应的 SF Symbols 图标名称
     public var iconName: String {
         switch self {
         case .learning:
@@ -43,11 +46,15 @@ public enum AppTab: String, Hashable, CaseIterable, Identifiable {
         }
     }
 
+    /// 兼容性系统图标名称别名
     public var systemImage: String { iconName }
+    /// 兼容性图标名称别名
     public var icon: String { iconName }
 }
 
-/// 顶层主界面视图
+/// 应用顶层根视图
+///
+/// 包含四个核心功能模块的 TabView 容器并维护当前选中的导航分支。
 public struct ContentView: View {
     @State private var selectedTab: AppTab = .learning
 

@@ -5,12 +5,17 @@
 
 import SwiftUI
 
-/// Nemo 通用轻触动效按钮样式
-/// 为自定义卡片与胶囊按钮提供符合 Apple HIG 的按压反馈与触感缩放动效
+/// 通用轻触动效按钮样式
+///
+/// 为自定义卡片与胶囊按钮提供符合 Apple HIG 的按压缩放反馈与轻触觉动效。
 public struct NemoPressableButtonStyle: ButtonStyle {
     private let pressedScale: CGFloat
     private let pressedOpacity: Double
 
+    /// 初始化轻触反馈按钮样式
+    /// - Parameters:
+    ///   - pressedScale: 按下时的微缩比例，默认值为 0.98
+    ///   - pressedOpacity: 按下时的透明度，默认值为 0.85
     public init(pressedScale: CGFloat = 0.98, pressedOpacity: Double = 0.85) {
         self.pressedScale = pressedScale
         self.pressedOpacity = pressedOpacity
@@ -28,15 +33,17 @@ public struct NemoPressableButtonStyle: ButtonStyle {
 }
 
 public extension ButtonStyle where Self == NemoPressableButtonStyle {
+    /// 通用轻触动效样式便捷访问器
     static var nemoPressable: NemoPressableButtonStyle {
         NemoPressableButtonStyle()
     }
 }
 
-/// 遵循 Apple HIG 规范的主交互行动按钮样式（Primary Interactive Button）
-/// 严格对齐苹果原生锁屏/控制中心同款弹簧物理学（interpolatingSpring），
-/// 在手指触碰按下时产生深度微暗（-0.06 brightness）与触觉马达物理交汇，杜绝伪流光干扰。
+/// 核心主交互行动按钮样式
+///
+/// 遵循 Apple 物理动效设计，按下时产生细微明度加深（-0.06 brightness）与触觉马达反馈。
 public struct NemoPrimaryInteractiveButtonStyle: ButtonStyle {
+    /// 初始化主行动按钮样式
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
@@ -51,32 +58,8 @@ public struct NemoPrimaryInteractiveButtonStyle: ButtonStyle {
 }
 
 public extension ButtonStyle where Self == NemoPrimaryInteractiveButtonStyle {
+    /// 核心主交互行动按钮样式便捷访问器
     static var nemoPrimaryInteractive: NemoPrimaryInteractiveButtonStyle {
         NemoPrimaryInteractiveButtonStyle()
     }
 }
-
-/// 遵循 Apple HIG 规范并 100% 复用 Clash-Client 的主行动按钮修饰符
-/// 在 iOS 26+/27 系统上原生支持苹果官方 .glassProminent 液态玻璃材质，旧版本优雅降级为 .borderedProminent
-public extension View {
-    func nemoPrimaryActionButtonStyle() -> AnyView {
-        if #available(iOS 26.0, macOS 26.0, tvOS 26.0, *) {
-            return AnyView(buttonStyle(.glassProminent))
-        }
-        return AnyView(buttonStyle(.borderedProminent))
-    }
-
-    @ViewBuilder
-    func nemoCapsuleButtonBorderShape() -> some View {
-        #if os(macOS)
-        if #available(macOS 14.0, *) {
-            buttonBorderShape(.capsule)
-        } else {
-            self
-        }
-        #else
-        buttonBorderShape(.capsule)
-        #endif
-    }
-}
-

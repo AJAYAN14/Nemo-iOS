@@ -4,43 +4,47 @@
 //
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
-/// 学习主页（100% 对齐 Android HomeScreen.kt 业务与结构）
+/// 学习中心主视图
+///
+/// 承载每日学习打卡状态、核心指标便当盒看板（Bento Grid）以及多维日语学习资源入口。
 public struct LearningHomeView: View {
+    /// 学习内容模式枚举
     public enum LearningMode: String, CaseIterable, Identifiable {
+        /// 单词学习模式
         case word = "单词"
+        /// 语法学习模式
         case grammar = "语法"
+
         public var id: String { rawValue }
     }
 
-    // 状态对齐 Android uiState
     @State private var learningMode: LearningMode = .word
     @State private var dailyStreak: Int = 12
     @State private var currentProgress: Int = 15      // 今日新学完成数
     @State private var dailyGoal: Int = 20            // 新学目标
     @State private var reviewedToday: Int = 18        // 今日已复习数
     @State private var itemsDue: Int = 14             // 待复习未完成数
-    @State private var dailyCompletionRate: Int = 75  // 达成率 %
+    @State private var dailyCompletionRate: Int = 75  // 达成率百分比
     @State private var username: String = "Nemo"
 
-    // 动态状态（遵循 Android 真实业务状态）
+    /// 是否已开始今日学习
     private var isLearned: Bool { currentProgress > 0 }
 
     public init() {}
 
+    /// 今日需复习的总条目数
     private var totalReviewItems: Int {
         reviewedToday + itemsDue
     }
 
+    /// 今日新学进度占比（0.0 至 1.0）
     private var progressFraction: Double {
         guard dailyGoal > 0 else { return 0.0 }
         return min(Double(currentProgress) / Double(dailyGoal), 1.0)
     }
 
-    // 动态生成副标题问候短语（对齐 Android 时段问候）
+    /// 根据当前时段动态生成的副标题问候语
     private var subGreeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
@@ -55,6 +59,7 @@ public struct LearningHomeView: View {
         }
     }
 
+    /// 当前模式对应的主题强调色
     private var primaryModeColor: Color {
         learningMode == .word ? Color.orange : Color.green
     }
@@ -65,7 +70,7 @@ public struct LearningHomeView: View {
                 // 1. 顶部问候栏与头像
                 greetingHeaderSection
 
-                // 2. Bento Grid 核心布局区
+                // 2. 便当盒核心指标布局区
                 bentoGridSection
 
                 // 3. 学习资源区块
@@ -78,7 +83,7 @@ public struct LearningHomeView: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    // MARK: - 1. 顶部用户欢迎栏 (对齐 Android Header)
+    // MARK: - 顶部问候栏
     private var greetingHeaderSection: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 4) {
@@ -98,6 +103,7 @@ public struct LearningHomeView: View {
                 Circle()
                     .fill(primaryModeColor.opacity(0.15))
                     .frame(width: 44, height: 44)
+
                 Image(systemName: "person.crop.circle.fill")
                     .resizable()
                     .scaledToFit()
@@ -112,10 +118,10 @@ public struct LearningHomeView: View {
         .padding(.horizontal, 2)
     }
 
-    // MARK: - 2. Bento Grid 核心便当盒网格 (对齐 Android Bento 1~5)
+    // MARK: - 核心便当盒网格看板
     private var bentoGridSection: some View {
         VStack(spacing: 12) {
-            // Bento 1: 顶部控制卡片 (连续打卡徽章 + 单词/语法模式切换)
+            // 控制卡片：连续打卡徽章与模式分段切换
             NemoCard(cornerRadius: 20, padding: 12) {
                 HStack {
                     // 打卡天数徽章
@@ -145,10 +151,10 @@ public struct LearningHomeView: View {
                 }
             }
 
-            // 中部核心指标网格: 左侧环形大卡片 + 右侧双统计卡片 (原生 Grid 自动等高)
+            // 中部核心指标网格：左侧环形进度仪表与右侧统计双卡片
             Grid(horizontalSpacing: 12, verticalSpacing: 12) {
                 GridRow {
-                    // Bento 2: 今日新学进度大卡片 (左侧，原生 Grid 自动匹配右侧双卡片总高度)
+                    // 今日新学进度卡片
                     NemoCard(cornerRadius: 20, padding: 16) {
                         VStack(spacing: 0) {
                             Text("今日新学进度")
@@ -157,7 +163,7 @@ public struct LearningHomeView: View {
 
                             Spacer(minLength: 8)
 
-                            // 环形进度指示器 (使用苹果官方 Gauge 原生控件)
+                            // 环形进度指示器（采用 Apple 原生 Gauge 控件）
                             Gauge(value: progressFraction, in: 0...1) {
                                 Text("今日新学进度")
                             } currentValueLabel: {
@@ -182,7 +188,7 @@ public struct LearningHomeView: View {
 
                     // 右侧上下排列的两张统计卡片
                     VStack(spacing: 12) {
-                        // Bento 3: 复习进度卡片
+                        // 复习进度卡片
                         NemoCard(cornerRadius: 20, padding: 14) {
                             VStack(alignment: .leading, spacing: 8) {
                                 ZStack {
@@ -210,7 +216,7 @@ public struct LearningHomeView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
 
-                        // Bento 4: 学习达成率卡片
+                        // 学习达成率卡片
                         NemoCard(cornerRadius: 20, padding: 14) {
                             VStack(alignment: .leading, spacing: 8) {
                                 ZStack {
@@ -242,9 +248,9 @@ public struct LearningHomeView: View {
                 }
             }
 
-            // Bento 5: 底部主行动按钮 (100% 复用 Clash-Client 官方同款：.clashPrimaryActionButtonStyle + 胶囊 + 大尺寸 50pt + 单词橙/语法绿)
+            // 底部主行动胶囊按钮
             Button {
-                // 点击开始学习交互占位
+                // TODO: 接入开始学习交互流程
             } label: {
                 HStack(spacing: 6) {
                     Text(isLearned ? "继续学习" : "立即开始")
@@ -263,15 +269,15 @@ public struct LearningHomeView: View {
         }
     }
 
-    // MARK: - 3. 学习资源区块 (对齐 Android title_learning_resources)
+    // MARK: - 学习资源推荐区
     private var learningResourcesSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             NemoSectionHeader("学习资源")
                 .padding(.horizontal, 4)
 
-            // 全宽卡片：热力图 (记录每日学习足迹)
+            // 全宽卡片：学习足迹热力图
             Button {
-                // 跳转热力图占位
+                // TODO: 接入学习足迹热力图详情页
             } label: {
                 NemoCard(cornerRadius: 20, padding: 16) {
                     HStack(spacing: 14) {

@@ -2,17 +2,20 @@
 //  NemoSectionHeader.swift
 //  Nemo
 //
-//  Created by AJIAN on 2026/11/22.
-//
 
 import SwiftUI
 
-/// Nemo 全局统一卡片分区大标题组件
-/// 严格遵循 Apple HIG 规范：Headline 17pt 粗体，自适应深浅色 Primary 主色调
+/// 全局统一卡片分区大标题视图
+///
+/// 遵循 Apple HIG 规范：Headline 17 pt 粗体，自适应深浅色主色调，禁用小写自动转换。
 public struct NemoSectionHeader: View {
     private let title: String
     private let subtitle: String?
 
+    /// 初始化分区大标题视图
+    /// - Parameters:
+    ///   - title: 分区主标题文本
+    ///   - subtitle: 可选的分区副标题说明文本，默认值为 nil
     public init(_ title: String, subtitle: String? = nil) {
         self.title = title
         self.subtitle = subtitle

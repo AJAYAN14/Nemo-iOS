@@ -26,15 +26,19 @@
 E:\Nemo\iOS\Nemo\
 ├── Nemo.xcodeproj/                     # Xcode 工程配置文件
 ├── Nemo/
-│   ├── NemoApp.swift                   # 应用主入口，全局 .preferredColorScheme 外观管理
+│   ├── NemoApp.swift                   # 应用主入口，全局外观管理与启动屏交叉淡出转场
 │   ├── ContentView.swift               # 顶层 4-Tab 导航容器 (主页、进度、测试、个人)
-│   ├── Assets.xcassets/                # 高清资产库 (包含 8 套流体玻璃 AppIcon 及预览图)
+│   ├── Assets.xcassets/                # 高清资产库 (包含 8 套流体玻璃 AppIcon 及 NemoSplashLogo 图集)
 │   ├── Core/
 │   │   └── UI/
-│   │       └── Components/
-│   │           ├── NemoCard.swift                  # G2 连续圆角卡片容器与跨平台语义色彩扩展
-│   │           ├── NemoSectionHeader.swift         # 全局统一 17pt Bold Primary 卡片大标题组件
-│   │           └── NemoPressableButtonStyle.swift  # 物理弹簧缩放与触觉反馈按钮样式
+│   │       ├── Components/
+│   │       │   ├── NemoSplashView.swift            # 全新品牌启动屏 (深海呼吸光晕 + 6浮动几何体 + Welcome!逐字弹跳 + 底部Logo展开)
+│   │       │   ├── NemoCard.swift                  # G2 连续圆角卡片容器与跨平台语义色彩扩展
+│   │       │   ├── NemoSectionHeader.swift         # 全局统一 17pt Bold Primary 卡片大标题组件
+│   │       │   └── NemoPressableButtonStyle.swift  # 物理弹簧缩放与触觉反馈按钮样式
+│   │       └── Extensions/
+│   │           ├── Color+NemoTheme.swift           # 系统级分组背景与启动屏专属语义色彩
+│   │           └── View+NemoStyles.swift           # 行动按钮与胶囊轮廓公共修饰符
 │   └── Features/
 │       ├── Learning/
 │       │   └── LearningHomeView.swift              # 学习主页 (Bento 栅格 + 学习资源)
@@ -52,7 +56,34 @@ E:\Nemo\iOS\Nemo\
 
 ---
 
-## 二、四大主界面实现全貌 (100% 对齐 Android Nemo)
+## 二、全新品牌启动屏实现全貌 (`NemoSplashView.swift`)
+
+* **设计定位与规范**：面向 iOS 27 / 现代 iOS 原生标准开发，100% 复刻 Android Nemo 开屏品牌微动效，严格遵循 Apple HIG 启动屏无缝平滑交接准则。
+* **冷启动静态底色与 Logo 无缝交接（Zero-Jitter Hand-off）**：
+  - Xcode 自动生成轻量级启动屏配置，浅色纯白、深色纯黑；
+  - 启动第一帧与 SwiftUI `NemoSplashView` 像素级重合，彻底杜绝闪黑或跳动。
+* **中央舞台核心微动效**：
+  1. **深海呼吸环境光晕 (Ambient Aurora Glow)**：
+     - 460pt 尺寸，配合 48pt Blur 彻底消融边界；
+     - 采用多阶平滑指数衰减双径向渐变（深色：`nemoSplashGlowSky` + `nemoSplashGlowTeal`，浅色：`nemoSplashGlowLightBlue` + `nemoSplashGlowOrange`）；
+     - 4.2 秒周期循环平滑呼吸缩放（0.88 ~ 1.14）与微旋转（-4° ~ 6°）。
+  2. **四周 6 组漂浮彩色小几何体**：
+     - 精准贝塞尔矢量图形（`HeartShape`、`TriangleShape`、`RoundedRectangle`）；
+     - 120ms~460ms 依次弹跳入场，随后进入各自独立周期（3.2s~4.0s）的微悬浮浮动（-8pt）与微旋转（14°）。
+  3. **中央 "Welcome!" 英文与微笑弧线**：
+     - 8 个字符以 55ms 递增步进弹跳弹出（位移、缩放、微旋转、淡入）；
+     - 微笑贝塞尔弧线（`SmileArcShape`）顺滑从左到右描边生长（0 -> 1）。
+* **底部品牌锁（Brand Lockup）**：
+  - 60×60pt 品牌 Logo：100ms 弹出 -> 550ms 执行 Push 弹簧微抖反馈，并伴随系统触觉引擎微震动（`.sensoryFeedback(.impact(weight: .light))`）；
+  - 同时展开间隙、竖向分割线生长拉伸，遮罩平滑滑出加粗 32pt "Nemo" 英文。
+* **平滑交叉转场与无障碍支持**：
+  - 2.4 秒动效自然就位后触发回调，通过 `NemoApp.swift` 执行 0.45 秒平滑 Crossfade 进入主页 `ContentView`；
+  - 底座视图预挂载，转场零卡顿；
+  - 自动响应 `@Environment(\.accessibilityReduceMotion)`，开启减弱动效时自动跳过剧烈弹跳与浮动，以轻柔渐变优雅过渡。
+
+---
+
+## 三、四大主界面实现全貌 (100% 对齐 Android Nemo)
 
 ### 1. 学习主页 (`LearningHomeView.swift`)
 * **导航栏设定**：`.toolbar(.hidden, for: .navigationBar)`，通顶沉浸展示；
@@ -126,9 +157,9 @@ E:\Nemo\iOS\Nemo\
   - **记忆算法配置**：紫色芯片图标，副标题“步进、提前复习与 Leech 策略”，带跳转箭头；
   - **AI 工坊配置**：蓝色星光图标，副标题“设置 API Key 与 AI 模型”，带跳转箭头；
 * **分区 4：语音发音**
-  - 翻卡自动朗读开关；
-  - 发音人选择（Kyoko 系统原生女声 / Otoya 系统原生男声 / Siri 日语音声）；
-  - 发音语速 Slider（0.5x ~ 2.0x 连续平滑调节，实时展示倍速值）；
+  - 单行独立导航入口「语音设置 >」（粉色扬声器圆角图标井），跳转至原生二级子界面 `TtsSettingsView`；
+  - 彻底移除了“翻卡自动朗读”（保证界面纯洁性）；
+  - 支持原生发音人选择（`Picker(.navigationLink)`）、标准乌龟兔子语速调节、音调调节、双语例句试听与默认重置。
 * **分区 5：数据管理**
   - 导出学习数据、导入学习数据、存储空间占用统计（14.2 MB）、重置学习数据（红色 Destructive 按钮）；
 * **分区 6：关于 Nemo**
@@ -219,3 +250,63 @@ E:\Nemo\iOS\Nemo\
 | `settings_daily_grammar_goal` | `Int` | `10` | 每日语法新学目标数量 |
 | `settings_learning_day_reset_hour`| `Int` | `4` | 学习日重置刷新时点 (0, 2, 4, 5, 6) |
 | `settings_random_extract_new_content` | `Bool` | `false` | 新内容是否乱序抽取 |
+| `settings_tts_voice_name` | `String` | `"Kyoko"` | 选中的系统日语发音人代号 |
+| `settings_tts_chinese_voice_name` | `String` | `"Tingting"` | 选中的系统中文发音人代号 |
+| `settings_tts_speed` | `Double` | `1.0` | 语音朗读语速倍率 (0.5x ~ 2.0x) |
+| `settings_tts_pitch` | `Double` | `1.0` | 语音朗读音调倍率 (0.5x ~ 2.0x) |
+
+---
+
+## 六、本次对话最新交付成果汇总 (2026-11-22)
+
+### 1. 全工程 Apple DocC 规范与纯净血统治理
+* **清理第三方与安卓元说明**：全面审查并清除了所有界面组件中的“对齐 Android”、“迁移自安卓”等口水套话与多余元说明；
+* **采用 Apple 标准 DocC 注释规范**：全量代码均采用标准三斜线（`///`）文档注释，精确描述组件设计意图、参数范畴及返回值，契合 Apple 原生工程规范。
+
+### 2. 深浅色模式切换生硬问题根治（系统级 0.35s 平滑交叉溶解）
+* **痛点根因**：原先 `@AppStorage` 跨视图写入状态时丢失了 SwiftUI 动画事务，且 `UIWindow.overrideUserInterfaceStyle` 底层默认为 0ms 瞬间硬切，导致界面瞬间闪烁、极为刺眼；
+* **系统级平滑解决方案**：
+  1. 在 `NemoApp.swift` 根视图挂载 `.animation(.easeInOut(duration: 0.35), value: currentColorScheme)`；
+  2. 在 `ThemeSettingsView.swift` 抽象统一的 `updateAppearance(to:)` 方法，直接触发原生 `UIView.transition(with: window, duration: 0.35, options: [.transitionCrossDissolve, .allowAnimatedContent])`；
+  3. 点击外观卡片绑定 `.sensoryFeedback(.selection, trigger: isSelected)`；
+* **效果达成**：深色与浅色之间实现如融雪般自然细腻的 0.35 秒平滑交叉溶解。
+
+### 3. 主题色彩系统升级为 Apple HIG 10 款原生全景调色盘
+* **扩充 10 款系统级强调色**：
+  1. 旗舰蓝（`Color.blue`，系统默认）
+  2. 极光青（`Color.cyan`）
+  3. 晨曦青（`Color.teal`）
+  4. 清爽薄荷（`Color.mint`）
+  5. 生机绿（`Color.green`）
+  6. 璨金黄（`Color.yellow`）
+  7. 活力橙（`Color.orange`）
+  8. 珊瑚红（`Color.red`）
+  9. 樱花粉（`Color.pink`）
+  10. 赛博紫（`Color.purple`）
+* **网格交互**：由单行升级为 2 排 × 5 列自适应网格，选中项附带高光描边与打勾标记；
+* **动态标题联动**：设置项右侧副标题实时响应并动态呈现当前选中的主题色名称。
+
+### 4. 设置主页极简单行化与时间选择纯净化
+* **消灭副标题与折行**：全面清理设置项行内副标题，杜绝多余文本占用横向空间导致的折行挤压，严格对齐 44pt 黄金等高规范；
+* **重置时间纯净化**：重置时间选项彻底删除冗余中文括号（如“凌晨 4:00 (推荐)”），全部改为国际标准纯净时间格式：`00:00`、`02:00`、`04:00`、`05:00`、`06:00`；
+* **说明下沉至 Footer**：将跨天保护等长文本规则统一下沉至 Section Footer 通栏灰字展示。
+
+### 5. 语音设置（`TtsSettingsView.swift`）100% 苹果原生化重构
+* **严格落实“有原生的就用原生的，不要自己写”**：
+  - **零手写弹窗**：彻底废弃手写 Sheet 弹窗与自定义图标修饰，全面改用 Apple 原生 `Picker("选择日语语音", selection: $selectedJapaneseVoice).pickerStyle(.navigationLink)`；
+  - **原生 Push 单选页**：主页行右侧自动展示当前音色名称与灰色指示箭头，点击后系统自动 Push 进入原生单选页，选中项自动带有系统蓝色 Checkmark，原生支持手势滑动返回；
+  - **动态系统音色**：基于原生 `AVSpeechSynthesisVoice.speechVoices()` 自动过滤并列举本地神经引擎已安装的发音人（Kyoko、Otoya、Siri、婷婷等）；
+* **Apple 官方标志性语速滑块**：
+  - 语速滑块两端接入 Apple 官方标准的乌龟（`Image(systemName: "tortoise.fill")`）与兔子（`Image(systemName: "hare.fill")`）辅助图标；
+  - 音调滑块采用原生「低」与「高」标签；
+* **彻底剔除私加内容**：
+  - **彻底删除了此前私自添加的“翻卡自动朗读”**分区及相关变量，保持语音设置职责纯粹；
+* **原生试听与重置**：
+  - 采用原生 `Button` 承载双语例句试听（带播放/停止状态指示）；
+  - 采用原生 `Button(role: .destructive)` 实现一键“恢复默认设置”。
+
+### 6. 自动化编译验证与交付状态
+* **构建脚本**：`build_ios.ps1` 管道自动化清理、推送虚拟机、执行无签名 Release 构建与 IPA 打包；
+* **编译状态**：`xcodebuild Release` 0 报错通过；
+* **交付产物**：`E:\Nemo\Nemo.ipa`（最新构建包约 8.9 MB）。
+

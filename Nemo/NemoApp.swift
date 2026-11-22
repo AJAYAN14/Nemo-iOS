@@ -2,11 +2,12 @@
 //  NemoApp.swift
 //  Nemo
 //
-//  Created by AJIAN on 2026/11/21.
-//
 
 import SwiftUI
 
+/// Nemo iOS 应用程序入口
+///
+/// 负责全局窗口构建与外观模式（深浅色调度）的统一生命周期管理。
 @main
 struct NemoApp: App {
     @AppStorage("settings_dark_mode_option") private var storedDarkMode: String = "auto"
@@ -14,28 +15,48 @@ struct NemoApp: App {
     @AppStorage("settings_dark_start_time") private var darkModeStartTime: String = "21:00"
     @AppStorage("settings_dark_end_time") private var darkModeEndTime: String = "07:00"
 
+    /// 控制启动开屏动画的生命周期展示状态
+    @State private var isSplashActive: Bool = true
+
+    /// 当前生效的全局颜色外观配置
+    ///
+    /// 当设为自动跟随系统时返回 `nil`，交由系统级外观调度；当设为自定时段时根据时间窗口计算返回 `.dark` 或 `.light`。
     private var currentColorScheme: ColorScheme? {
         if storedDarkMode == "light" {
             return .light
         } else if storedDarkMode == "dark" {
             return .dark
         } else {
-            // "auto" 模式
             if storedAutoStrategy == "scheduled" {
                 return isCurrentTimeInDarkWindow() ? .dark : .light
             }
-            // "follow_system" - 返回 nil 遵从 iOS 系统外观 (Apple HIG 规范)
             return nil
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .preferredColorScheme(currentColorScheme)
+            ZStack {
+                ContentView()
+                    .opacity(isSplashActive ? 0.0 : 1.0)
+
+                if isSplashActive {
+                    NemoSplashView {
+                        withAnimation(.easeInOut(duration: 0.45)) {
+                            isSplashActive = false
+                        }
+                    }
+                    .transition(.opacity)
+                    .zIndex(1)
+                }
+            }
+            .preferredColorScheme(currentColorScheme)
+            .animation(.easeInOut(duration: 0.35), value: currentColorScheme)
         }
     }
 
+    /// 校验当前本地系统时间是否处于用户设定的深色时间窗口内
+    /// - Returns: 若在深色时段内则返回 `true`，否则返回 `false`
     private func isCurrentTimeInDarkWindow() -> Bool {
         let calendar = Calendar.current
         let now = Date()
@@ -53,7 +74,7 @@ struct NemoApp: App {
         if startTotal < endTotal {
             return currentTotal >= startTotal && currentTotal < endTotal
         } else {
-            // 跨天情况，如 21:00 到 07:00
+            // 处理跨午夜时段（例如 21:00 至次日 07:00）
             return currentTotal >= startTotal || currentTotal < endTotal
         }
     }

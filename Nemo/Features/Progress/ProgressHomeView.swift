@@ -4,13 +4,11 @@
 //
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
-/// 进度仪表盘主页（100% 对齐 Android ProgressDashboardScreen.kt 结构与文案）
+/// 学习进度仪表盘主视图
+///
+/// 汇总展示艾宾浩斯复习曲线、学习轨迹统计、核心词库入口与难点突破专项。
 public struct ProgressHomeView: View {
-    // 状态对齐 Android stats 数据
     @State private var totalProgressFraction: Double = 0.65
     @State private var totalMastered: Int = 780
     @State private var totalWords: Int = 1200
@@ -26,7 +24,7 @@ public struct ProgressHomeView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // 1. 学习摘要卡片（3页轮播 Bento Grid，对应 Android LearningSummaryCard）
+                // 1. 学习摘要便当盒轮播卡片
                 learningSummarySection
 
                 // 2. 统计与分析 分区
@@ -46,7 +44,7 @@ public struct ProgressHomeView: View {
         .navigationBarTitleDisplayMode(.large)
     }
 
-    // MARK: - 1. 学习摘要卡片（3页 Bento Grid 轮播卡片）
+    // MARK: - 学习摘要卡片
     private var learningSummarySection: some View {
         LearningSummaryCarouselCard(
             progress: totalProgressFraction,
@@ -62,7 +60,7 @@ public struct ProgressHomeView: View {
         )
     }
 
-    // MARK: - 2. 统计与分析 分区 (对齐 Android stats_dashboard_section_stats_analysis)
+    // MARK: - 统计与分析 分区
     private var statsAnalysisSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("统计与分析")
@@ -105,7 +103,7 @@ public struct ProgressHomeView: View {
         }
     }
 
-    // MARK: - 3. 资料与词库 分区 (对齐 Android stats_dashboard_section_materials_lexicon)
+    // MARK: - 资料与词库 分区
     private var materialsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("资料与词库")
@@ -148,7 +146,7 @@ public struct ProgressHomeView: View {
         }
     }
 
-    // MARK: - 4. 强化与突破 分区 (对齐 Android stats_dashboard_section_reinforce_breakthrough)
+    // MARK: - 强化与突破 分区
     private var reinforceSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("强化与突破")
@@ -191,7 +189,7 @@ public struct ProgressHomeView: View {
         VStack(spacing: 0) {
             Button(action: action) {
                 HStack(spacing: 12) {
-                    // 1. 图标容器（100% 对齐 Clash-Client: 29x29, G2连续平滑圆角 9pt, 纯白色 Semibold 图标）
+                    // 图标徽章：29x29 pt，G2 连续平滑圆角 9 pt
                     Image(systemName: icon)
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.white)
@@ -201,7 +199,7 @@ public struct ProgressHomeView: View {
                                 .fill(tint)
                         )
 
-                    // 2. 标题 + 副标题（对齐 Clash-Client 中文排版: 17pt body + 13pt footnote, 间距 5pt）
+                    // 标题与副标题排版：17 pt 标题搭配 13 pt 脚注说明
                     VStack(alignment: .leading, spacing: 5) {
                         Text(title)
                             .font(.body)
@@ -214,7 +212,7 @@ public struct ProgressHomeView: View {
 
                     Spacer(minLength: 0)
 
-                    // 3. 右侧展开箭头（对齐 Clash-Client: chevron.forward, footnote semibold, tertiary）
+                    // 右侧导航展开箭头
                     Image(systemName: "chevron.forward")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(.tertiary)
@@ -226,8 +224,9 @@ public struct ProgressHomeView: View {
             .buttonStyle(.nemoPressable)
 
             if showDivider {
+                // 8(边距) + 29(图标宽) + 12(间距) = 49 pt，精确对齐文字左侧边缘
                 Divider()
-                    .padding(.leading, 49) // 8(边距) + 29(图标) + 12(间距) = 49pt，精确对齐文字左侧边缘
+                    .padding(.leading, 49)
             }
         }
     }

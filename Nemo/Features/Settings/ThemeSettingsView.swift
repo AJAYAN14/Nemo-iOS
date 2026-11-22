@@ -2,27 +2,34 @@
 //  ThemeSettingsView.swift
 //  Nemo
 //
-//  Created by AJIAN on 2026/11/22.
-//
 
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
 #endif
 
-// MARK: - 8 款专为 Apple 打造的高清流体玻璃图标选项
+/// 应用程序桌面主图标样式枚举
 public enum AppIconOption: String, CaseIterable, Identifiable {
+    /// 经典旗舰冰蓝（系统默认）
     case blue = "Apple-blue"
+    /// 黑曜透亮
     case black = "Apple-black"
+    /// 薄荷翠绿
     case green = "Apple-green"
+    /// 鲜活亮橙
     case orange = "Apple-orange"
+    /// 樱花透粉
     case pink = "Apple-pink"
+    /// 赛博幻紫
     case purple = "Apple-purple"
+    /// 珊瑚暖红
     case red = "Apple-red"
+    /// 璨金阳光
     case yellow = "Apple-yellow"
 
     public var id: String { rawValue }
 
+    /// 图标显示标题
     public var title: String {
         switch self {
         case .blue: return "旗舰冰蓝"
@@ -36,9 +43,10 @@ public enum AppIconOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// 图标视觉风格副标题
     public var subtitle: String {
         switch self {
-        case .blue: return "对齐 Android 原生默认"
+        case .blue: return "经典冰蓝"
         case .black: return "黑曜石通透高光"
         case .green: return "薄荷翠绿微光"
         case .orange: return "明快活力橙"
@@ -49,6 +57,7 @@ public enum AppIconOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// 资源键值名
     public var colorKey: String {
         switch self {
         case .blue: return "blue"
@@ -62,15 +71,18 @@ public enum AppIconOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// 预览图标资源名
     public var previewImageName: String {
         "AppIconPreview-\(colorKey)"
     }
 
+    /// 供系统调用的候选图标名称（默认冰蓝传 nil）
     public var alternateIconName: String? {
         if self == .blue { return nil }
         return "AppIcon-\(colorKey)"
     }
 
+    /// 对应的主题强调色
     public var accentColor: Color {
         switch self {
         case .blue: return Color.blue
@@ -85,36 +97,61 @@ public enum AppIconOption: String, CaseIterable, Identifiable {
     }
 }
 
-// MARK: - 主题强调色枚举
+/// 主题强调色选项枚举（遵循 Apple HIG 官方原生调色盘）
 public enum ThemeAccentColorOption: String, CaseIterable, Identifiable {
-    case green = "薄荷绿"
-    case orange = "活力橙"
+    /// 旗舰深蓝（默认）
     case blue = "旗舰蓝"
-    case purple = "赛博紫"
+    /// 极光青蓝
+    case cyan = "极光青"
+    /// 晨曦青绿
+    case teal = "晨曦青"
+    /// 清爽薄荷
+    case mint = "清爽薄荷"
+    /// 生机翠绿
+    case green = "生机绿"
+    /// 璨金明黄
+    case yellow = "璨金黄"
+    /// 活力暖橙
+    case orange = "活力橙"
+    /// 珊瑚绯红
+    case red = "珊瑚红"
+    /// 晶莹樱粉
     case pink = "樱花粉"
+    /// 赛博幻紫
+    case purple = "赛博紫"
 
     public var id: String { rawValue }
 
+    /// 选项对应的 SwiftUI 官方原生语义色彩
     public var color: Color {
         switch self {
-        case .green: return Color.green
-        case .orange: return Color.orange
         case .blue: return Color.blue
-        case .purple: return Color.purple
+        case .cyan: return Color.cyan
+        case .teal: return Color.teal
+        case .mint: return Color.mint
+        case .green: return Color.green
+        case .yellow: return Color.yellow
+        case .orange: return Color.orange
+        case .red: return Color.red
         case .pink: return Color.pink
+        case .purple: return Color.purple
         }
     }
 }
 
-// MARK: - 设置图标风格枚举
+/// 设置列表项图标呈现风格枚举
 public enum SettingIconStyleOption: String, CaseIterable, Identifiable {
+    /// 柔和半透材质
     case softTranslucent = "柔和半透"
+    /// 鲜活纯色材质
     case vibrantSolid = "鲜活纯色"
 
     public var id: String { rawValue }
 }
 
-// MARK: - 主题与外观视图
+/// 主题与外观个性化配置视图
+///
+/// 提供系统深浅色外观调度、自定时段选择、主题强调色与应用桌面图标切换功能。
 public struct ThemeSettingsView: View {
     @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.dismiss) private var dismiss
@@ -124,14 +161,14 @@ public struct ThemeSettingsView: View {
     @AppStorage("settings_auto_strategy") private var storedAutoStrategy: String = "follow_system"
     @AppStorage("settings_dark_start_time") private var darkModeStartTime: String = "21:00"
     @AppStorage("settings_dark_end_time") private var darkModeEndTime: String = "07:00"
-    @AppStorage("settings_theme_accent") private var storedAccentColor: String = "薄荷绿"
+    @AppStorage("settings_theme_accent") private var storedAccentColor: String = "旗舰蓝"
     @AppStorage("settings_icon_style") private var storedIconStyle: String = "柔和半透"
     @AppStorage("settings_app_icon_option") private var storedAppIcon: String = "Apple-blue"
 
     // 局部交互状态
     @State private var isAutoSwitch: Bool = true
     @State private var selectedAppIcon: AppIconOption = .blue
-    @State private var selectedAccent: ThemeAccentColorOption = .green
+    @State private var selectedAccent: ThemeAccentColorOption = .blue
     @State private var selectedIconStyle: SettingIconStyleOption = .softTranslucent
     @State private var isTabBarHidden: Bool = false
 
@@ -148,7 +185,7 @@ public struct ThemeSettingsView: View {
         selectedAccent.color
     }
 
-    // MARK: - 原生时间选择器绑定 (100% 遵循 iOS 原生 DatePicker 标准)
+    // MARK: - 自定义时间绑定
     private var darkStartDate: Binding<Date> {
         Binding {
             dateFromTimeString(darkModeStartTime) ?? defaultStartDate
@@ -194,12 +231,35 @@ public struct ThemeSettingsView: View {
         return formatter.string(from: date)
     }
 
+    /// 执行系统级平滑外观切换动效（触发原生 Window 交叉溶解）
+    /// - Parameter mode: 目标外观模式 ("light"、"dark" 或 "auto")
+    private func updateAppearance(to mode: String) {
+        #if canImport(UIKit)
+        if let windowScene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+           let window = windowScene.windows.first {
+            UIView.transition(with: window, duration: 0.35, options: [.transitionCrossDissolve, .allowAnimatedContent]) {
+                if mode != "auto" {
+                    self.isAutoSwitch = false
+                }
+                self.storedDarkMode = mode
+            }
+            return
+        }
+        #endif
+
+        withAnimation(.easeInOut(duration: 0.35)) {
+            if mode != "auto" {
+                isAutoSwitch = false
+            }
+            storedDarkMode = mode
+        }
+    }
+
     public var body: some View {
         List {
-            // MARK: 1. 外观显示模式 (遵循 Apple HIG 标准)
+            // MARK: - 外观显示模式
             Section {
                 VStack(spacing: 14) {
-                    // 真实 iPhone 宽高比浅色/深色机身微缩预览
                     HStack(spacing: 28) {
                         Spacer()
                         themeModePreviewCard(
@@ -207,10 +267,7 @@ public struct ThemeSettingsView: View {
                             isDark: false,
                             isSelected: !isDarkEffective
                         ) {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                isAutoSwitch = false
-                                storedDarkMode = "light"
-                            }
+                            updateAppearance(to: "light")
                         }
 
                         themeModePreviewCard(
@@ -218,10 +275,7 @@ public struct ThemeSettingsView: View {
                             isDark: true,
                             isSelected: isDarkEffective
                         ) {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                isAutoSwitch = false
-                                storedDarkMode = "dark"
-                            }
+                            updateAppearance(to: "dark")
                         }
                         Spacer()
                     }
@@ -229,9 +283,9 @@ public struct ThemeSettingsView: View {
                     .padding(.vertical, 4)
                 }
                 .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
-                .listRowSeparator(.hidden) // 彻底消除机型预览下方的断裂分割线
+                .listRowSeparator(.hidden)
 
-                // 自动切换开关 (Apple HIG 标准交互)
+                // 自动切换开关
                 Toggle(isOn: $isAutoSwitch.animation(.easeInOut(duration: 0.2))) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("自动")
@@ -243,12 +297,12 @@ public struct ThemeSettingsView: View {
                     }
                 }
                 .tint(currentAccentColor)
-                .listRowSeparator(.hidden, edges: .top) // 确保自动开关上方无多余分割线
+                .listRowSeparator(.hidden, edges: .top)
                 .onChange(of: isAutoSwitch) { auto in
                     if auto {
-                        storedDarkMode = "auto"
+                        updateAppearance(to: "auto")
                     } else {
-                        storedDarkMode = isDarkEffective ? "dark" : "light"
+                        updateAppearance(to: isDarkEffective ? "dark" : "light")
                     }
                 }
 
@@ -261,7 +315,6 @@ public struct ThemeSettingsView: View {
                     .pickerStyle(.segmented)
                     .listRowSeparator(.hidden)
 
-                    // 原生自定义时间选择器（直接使用 iOS 官方 DatePicker，带原生转轮与数字小键盘弹层）
                     if storedAutoStrategy == "scheduled" {
                         DatePicker(selection: darkStartDate, displayedComponents: .hourAndMinute) {
                             Label("深色开始时间", systemImage: "moon.fill")
@@ -284,7 +337,7 @@ public struct ThemeSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // MARK: 2. 个性化定制 (Customization)
+            // MARK: - 个性化定制
             Section {
                 // 主题强调色
                 VStack(alignment: .leading, spacing: 12) {
@@ -298,7 +351,10 @@ public struct ThemeSettingsView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    HStack(spacing: 16) {
+                    LazyVGrid(
+                        columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 5),
+                        spacing: 14
+                    ) {
                         ForEach(ThemeAccentColorOption.allCases) { opt in
                             Button {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -325,12 +381,11 @@ public struct ThemeSettingsView: View {
                         }
                     }
                     .sensoryFeedback(.selection, trigger: selectedAccent)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 4)
                 }
                 .padding(.vertical, 4)
 
-                // 设置项图标风格 (已去除重复的“图标风格”文字)
+                // 设置项图标风格
                 HStack {
                     Text("设置项图标风格")
                         .font(.body.weight(.medium))
@@ -350,7 +405,7 @@ public struct ThemeSettingsView: View {
                 NemoSectionHeader("个性化定制")
             }
 
-            // MARK: 3. 应用桌面图标 (App Desktop Icon - 核心 8 款)
+            // MARK: - 应用桌面图标
             Section {
                 VStack(alignment: .leading, spacing: 14) {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -368,7 +423,7 @@ public struct ThemeSettingsView: View {
             } header: {
                 NemoSectionHeader("应用桌面图标")
             } footer: {
-                Text("提供 8 款专为 Apple 设计的 Squircle 流体玻璃高光图标，默认对齐 Android 旗舰蓝。点击可实时在桌面生效。")
+                Text("提供 8 款专为 Apple 设计的 Squircle 流体玻璃高光图标，默认采用旗舰冰蓝风格。点击可实时在桌面生效。")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -376,7 +431,7 @@ public struct ThemeSettingsView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("主题与外观")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar) // 带动画隐藏底栏，仅在四个主界面显示
+        .toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar)
         .animation(.spring(response: 0.38, dampingFraction: 0.82), value: isTabBarHidden)
         .onAppear {
             withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
@@ -399,6 +454,9 @@ public struct ThemeSettingsView: View {
 
             if let savedAccent = ThemeAccentColorOption(rawValue: storedAccentColor) {
                 selectedAccent = savedAccent
+            } else {
+                selectedAccent = .blue
+                storedAccentColor = "旗舰蓝"
             }
             if let savedIconStyle = SettingIconStyleOption(rawValue: storedIconStyle) {
                 selectedIconStyle = savedIconStyle
@@ -412,7 +470,7 @@ public struct ThemeSettingsView: View {
         }
     }
 
-    // MARK: - 主题模式微缩 iPhone 预览卡片 (符合 Apple HIG 规范与真实 iPhone 比例)
+    // MARK: - 主题模式机身微缩预览卡片
     @ViewBuilder
     private func themeModePreviewCard(
         title: String,
@@ -422,9 +480,7 @@ public struct ThemeSettingsView: View {
     ) -> some View {
         Button(action: action) {
             VStack(spacing: 12) {
-                // 1. iPhone 手机微缩外壳 (真实 9:19.5 宽高比)
                 ZStack {
-                    // 选中状态高亮外轮廓
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .strokeBorder(
                             isSelected ? currentAccentColor : Color.clear,
@@ -432,28 +488,22 @@ public struct ThemeSettingsView: View {
                         )
                         .frame(width: 96, height: 188)
 
-                    // iPhone 机身与屏幕容器
                     ZStack(alignment: .top) {
-                        // 屏幕底色
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .fill(isDark ? Color(red: 0.10, green: 0.10, blue: 0.12) : Color(red: 0.94, green: 0.95, blue: 0.97))
 
-                        // 机身边框（精密微金属边缘线）
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .strokeBorder(
                                 isDark ? Color.white.opacity(0.18) : Color.black.opacity(0.15),
                                 lineWidth: 1.5
                             )
 
-                        // 屏幕内部微缩元素
                         VStack(spacing: 8) {
-                            // 灵动岛 (Dynamic Island)
                             Capsule()
                                 .fill(isDark ? Color.black : Color(red: 0.12, green: 0.12, blue: 0.14))
                                 .frame(width: 28, height: 7.5)
                                 .padding(.top, 5)
 
-                            // 模拟微缩导航栏与标题
                             HStack {
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(isDark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
@@ -466,7 +516,6 @@ public struct ThemeSettingsView: View {
                             .padding(.horizontal, 10)
                             .padding(.top, 2)
 
-                            // 模拟主卡片 (Nemo 学习进度卡片)
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .fill(isDark ? Color(red: 0.18, green: 0.18, blue: 0.22) : Color.white)
                                 .frame(height: 44)
@@ -493,7 +542,6 @@ public struct ThemeSettingsView: View {
                                 }
                                 .padding(.horizontal, 8)
 
-                            // 模拟列表小行
                             VStack(spacing: 5) {
                                 ForEach(0..<2) { _ in
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -505,7 +553,6 @@ public struct ThemeSettingsView: View {
 
                             Spacer()
 
-                            // 模拟底栏四个 Tab 点
                             HStack(spacing: 12) {
                                 Circle().fill(currentAccentColor).frame(width: 4, height: 4)
                                 Circle().fill(isDark ? Color.white.opacity(0.3) : Color.black.opacity(0.25)).frame(width: 4, height: 4)
@@ -514,7 +561,6 @@ public struct ThemeSettingsView: View {
                             }
                             .padding(.bottom, 2)
 
-                            // 底部 Home Indicator (主屏幕横条)
                             Capsule()
                                 .fill(isDark ? Color.white.opacity(0.5) : Color.black.opacity(0.4))
                                 .frame(width: 32, height: 2.5)
@@ -526,7 +572,6 @@ public struct ThemeSettingsView: View {
                 }
                 .frame(width: 96, height: 188)
 
-                // 2. 底部单选与文字标签 (对齐 iOS 系统外观设置)
                 HStack(spacing: 6) {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 15))
@@ -539,6 +584,7 @@ public struct ThemeSettingsView: View {
             }
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 
     // MARK: - 单个 App 图标卡片
@@ -550,9 +596,7 @@ public struct ThemeSettingsView: View {
             applyAppIconChange(opt)
         } label: {
             VStack(spacing: 8) {
-                // 图标本体容器
                 ZStack {
-                    // 选中时的大外框环
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .strokeBorder(
                             isSelected ? currentAccentColor : Color.clear,
@@ -560,7 +604,6 @@ public struct ThemeSettingsView: View {
                         )
                         .frame(width: 74, height: 74)
 
-                    // 64×64 高清 Squircle 图标
                     ZStack {
                         Image(opt.previewImageName)
                             .resizable()
@@ -573,7 +616,6 @@ public struct ThemeSettingsView: View {
                             }
                     }
 
-                    // 选中时右上角 Check Badge
                     if isSelected {
                         VStack {
                             HStack {
@@ -598,7 +640,6 @@ public struct ThemeSettingsView: View {
                 }
                 .frame(width: 74, height: 74)
 
-                // 图标名称
                 Text(opt.title)
                     .font(.caption2.weight(isSelected ? .bold : .regular))
                     .foregroundStyle(isSelected ? .primary : .secondary)
@@ -608,7 +649,7 @@ public struct ThemeSettingsView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - 应用图标切换逻辑
+    // MARK: - 应用图标变更调用
     private func applyAppIconChange(_ opt: AppIconOption) {
         selectedAppIcon = opt
         storedAppIcon = opt.rawValue

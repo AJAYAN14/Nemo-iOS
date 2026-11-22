@@ -2,29 +2,27 @@
 //  LearningSummaryCarouselCard.swift
 //  Nemo
 //
-//  Created by Antigravity on 2026/11/21.
-//
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
-/// 视觉微缩指示类型（对应 Android BentoVisualType）
+/// 视觉微缩图形指示样式类型
 private enum BentoVisualType {
+    /// 线性进度条
     case progress
+    /// 点阵指示器
     case dots
+    /// 柱状趋势图
     case bars
 }
 
-/// Bento 统计单项数据模型
+/// 便当盒单项指标数据模型
 private struct BentoMetric {
     let label: String
     let value: String
     let unit: String
 }
 
-/// Bento 页面配置模型
+/// 便当盒轮播页配置模型
 private struct BentoPageModel {
     let title: String
     let systemIcon: String
@@ -35,7 +33,9 @@ private struct BentoPageModel {
     let visualType: BentoVisualType
 }
 
-/// 学习摘要卡片（3页 Bento Grid 轮播卡片，100% 对齐 Android LearningSummaryCard）
+/// 学习摘要轮播卡片视图
+///
+/// 采用 3 页便当盒（Bento Grid）网格设计，支持自动定时与手动滑动手势切换，直观展示日间概览、学习轨迹与成长总览。
 public struct LearningSummaryCarouselCard: View {
     public let progress: Double
     public let masteredCount: Int
@@ -50,6 +50,18 @@ public struct LearningSummaryCarouselCard: View {
 
     @State private var currentPage: Int = 0
 
+    /// 初始化学习摘要轮播卡片
+    /// - Parameters:
+    ///   - progress: 总体学习掌握度比例（0.0 至 1.0）
+    ///   - masteredCount: 已完全掌握的词汇或语法条目数
+    ///   - totalWords: 当前词库条目总数
+    ///   - todayLearned: 今日已完成学习的新条目数
+    ///   - dailyGoal: 每日新学目标设定值
+    ///   - unmasteredCount: 尚待掌握的条目总数
+    ///   - studyStreak: 连续自测或打卡天数
+    ///   - dueCount: 艾宾浩斯复习队列中当前待复习总数
+    ///   - totalStudyDays: 历史累计学习天数
+    ///   - weekStudyDays: 本周内已完成学习的天数
     public init(
         progress: Double = 0.65,
         masteredCount: Int = 780,
@@ -81,7 +93,7 @@ public struct LearningSummaryCarouselCard: View {
 
     private var pages: [BentoPageModel] {
         [
-            // 页 1: 日间概览 (Daily Overview)
+            // 第 1 页：日间概览
             BentoPageModel(
                 title: "日间概览",
                 systemIcon: "calendar.badge.clock",
@@ -91,7 +103,7 @@ public struct LearningSummaryCarouselCard: View {
                 bottomRight: BentoMetric(label: "目标完成度", value: "\(todayProgress)", unit: "%"),
                 visualType: .progress
             ),
-            // 页 2: 学习轨迹 (Learning Track)
+            // 第 2 页：学习轨迹
             BentoPageModel(
                 title: "学习轨迹",
                 systemIcon: "chart.xyaxis.line",
@@ -101,7 +113,7 @@ public struct LearningSummaryCarouselCard: View {
                 bottomRight: BentoMetric(label: "待学习", value: "\(unmasteredCount)", unit: "项"),
                 visualType: .dots
             ),
-            // 页 3: 成长总览 (Growth Overview)
+            // 第 3 页：成长总览
             BentoPageModel(
                 title: "成长总览",
                 systemIcon: "chart.line.uptrend.xyaxis",
@@ -116,7 +128,7 @@ public struct LearningSummaryCarouselCard: View {
 
     public var body: some View {
         VStack(spacing: 12) {
-            // 轮播容器（高度固定 172pt）
+            // 轮播页面容器
             TabView(selection: $currentPage) {
                 ForEach(0..<pages.count, id: \.self) { index in
                     bentoGrid(for: pages[index])
@@ -126,7 +138,7 @@ public struct LearningSummaryCarouselCard: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             .frame(height: 172)
 
-            // 动态滑动点阵指示器（跟随激活页主题色）
+            // 动态滑动点阵指示器
             slidingDotIndicator
         }
         .task {
@@ -139,14 +151,14 @@ public struct LearningSummaryCarouselCard: View {
         }
     }
 
-    // MARK: - Bento 栅格布局 (主卡 1.45 : 副卡 1.0)
+    // MARK: - Bento 网格布局（主卡 1.45 : 副卡 1.0）
     private func bentoGrid(for model: BentoPageModel) -> some View {
         HStack(spacing: 10) {
-            // 左侧大卡 (占比约 1.45)
+            // 左侧大卡（主指标）
             mainTile(model: model)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // 右侧上下堆叠副卡组 (占比约 1.0)
+            // 右侧上下堆叠副卡组
             VStack(spacing: 10) {
                 subTile(metric: model.topRight)
                 subTile(metric: model.bottomRight)
@@ -156,14 +168,13 @@ public struct LearningSummaryCarouselCard: View {
         }
     }
 
-    // MARK: - 左侧主卡 (Main Tile)
+    // MARK: - 左侧主卡
     private func mainTile(model: BentoPageModel) -> some View {
         ZStack(alignment: .bottomLeading) {
-            // 背景底色与 G2 连续圆角
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(model.accentColor)
 
-            // 右上角背景半透明水印大图标
+            // 右上角背景半透明水印图标
             VStack {
                 HStack {
                     Spacer()
@@ -176,18 +187,14 @@ public struct LearningSummaryCarouselCard: View {
             }
             .clipped()
 
-            // 底部内容区
             VStack(alignment: .leading, spacing: 6) {
-                // 顶部微缩图形
                 visualHint(type: model.visualType)
 
-                // 标签文案
                 Text(model.main.label)
                     .font(.caption2.bold())
                     .tracking(0.5)
                     .foregroundStyle(Color.white.opacity(0.85))
 
-                // 数值与单位
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(model.main.value)
                         .font(.system(size: 42, weight: .bold, design: .rounded))
@@ -205,7 +212,7 @@ public struct LearningSummaryCarouselCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
-    // MARK: - 右侧副卡 (Sub Tile)
+    // MARK: - 右侧副卡
     private func subTile(metric: BentoMetric) -> some View {
         ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -234,12 +241,11 @@ public struct LearningSummaryCarouselCard: View {
         .frame(maxHeight: .infinity)
     }
 
-    // MARK: - 3 种微缩图形指示
+    // MARK: - 微缩图形指示器
     @ViewBuilder
     private func visualHint(type: BentoVisualType) -> some View {
         switch type {
         case .progress:
-            // 苹果官方原生微缩线性进度条 (Apple HIG 原生标准控件)
             ProgressView(value: 0.7)
                 .progressViewStyle(.linear)
                 .tint(.white)
@@ -249,7 +255,6 @@ public struct LearningSummaryCarouselCard: View {
                 .padding(.bottom, 2)
 
         case .dots:
-            // 7 日点阵指示
             HStack(spacing: 4) {
                 ForEach(0..<7, id: \.self) { index in
                     RoundedRectangle(cornerRadius: 2, style: .continuous)
@@ -261,7 +266,6 @@ public struct LearningSummaryCarouselCard: View {
             .padding(.bottom, 2)
 
         case .bars:
-            // 4 柱微型趋势条
             HStack(alignment: .bottom, spacing: 4) {
                 barView(height: 8, opacity: 0.28)
                 barView(height: 12, opacity: 0.5)
@@ -278,7 +282,7 @@ public struct LearningSummaryCarouselCard: View {
             .frame(width: 4, height: height)
     }
 
-    // MARK: - 动态指示器
+    // MARK: - 动态滑动点阵指示器
     private var slidingDotIndicator: some View {
         HStack(spacing: 6) {
             ForEach(0..<pages.count, id: \.self) { index in

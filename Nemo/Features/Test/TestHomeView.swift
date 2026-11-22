@@ -4,13 +4,11 @@
 //
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
-/// 测试大厅（100% 对齐 Android TestDashboardScreen.kt 结构与文案）
+/// 能力测试与自测大厅主视图
+///
+/// 汇总展示今日战报、错题集与收藏夹复习巩固、四项基础练习模式以及综合专项能力工坊。
 public struct TestHomeView: View {
-    // 状态对齐 Android uiState
     @State private var todayTestCount: Int = 20
     @State private var consecutiveTestDays: Int = 8
     @State private var todayAccuracy: Double = 0.90
@@ -25,7 +23,7 @@ public struct TestHomeView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // 1. 顶部战报统计卡片 (对齐 Android CompactStatsPage)
+                // 1. 顶部今日战报统计卡片
                 testStatsSection
 
                 // 2. 复习与巩固 分区 (错题集 + 收藏夹)
@@ -45,7 +43,7 @@ public struct TestHomeView: View {
         .navigationBarTitleDisplayMode(.large)
     }
 
-    // MARK: - 1. 顶部战报统计卡片
+    // MARK: - 今日战报统计卡片
     private var testStatsSection: some View {
         NemoCard(cornerRadius: 24, padding: 18) {
             VStack(alignment: .leading, spacing: 14) {
@@ -116,7 +114,7 @@ public struct TestHomeView: View {
         }
     }
 
-    // MARK: - 2. 复习与巩固 (对齐 Android test_dashboard_section_review)
+    // MARK: - 复习与巩固 分区
     private var reviewAndConsolidateSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             NemoSectionHeader("复习与巩固")
@@ -125,7 +123,7 @@ public struct TestHomeView: View {
             HStack(spacing: 12) {
                 // 错题集
                 Button {
-                    // 跳转错题集占位
+                    // TODO: 接入错题集页面
                 } label: {
                     NemoCard(cornerRadius: 20, padding: 14) {
                         HStack(spacing: 12) {
@@ -155,7 +153,7 @@ public struct TestHomeView: View {
 
                 // 收藏夹
                 Button {
-                    // 跳转收藏夹占位
+                    // TODO: 接入收藏夹页面
                 } label: {
                     NemoCard(cornerRadius: 20, padding: 14) {
                         HStack(spacing: 12) {
@@ -186,7 +184,7 @@ public struct TestHomeView: View {
         }
     }
 
-    // MARK: - 3. 基础练习模式 (对齐 Android test_dashboard_section_basic: 单选、拼写、连线、排序)
+    // MARK: - 基础练习模式 分区
     private var basicPracticeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             NemoSectionHeader("基础练习模式")
@@ -268,14 +266,14 @@ public struct TestHomeView: View {
         .buttonStyle(.nemoPressable)
     }
 
-    // MARK: - 4. 其他能力强化 (能力工坊)
+    // MARK: - 其他能力强化 分区
     private var workshopSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             NemoSectionHeader("其他能力强化")
                 .padding(.horizontal, 4)
 
             Button {
-                // 进入能力工坊占位
+                // TODO: 接入综合能力工坊页面
             } label: {
                 NemoCard(cornerRadius: 20, padding: 16) {
                     HStack(spacing: 14) {

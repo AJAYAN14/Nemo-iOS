@@ -4,11 +4,10 @@
 //
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
-/// 设置主页（100% 对齐 Android SettingsScreen.kt 结构与文案）
+/// 个人中心与全局系统设置主视图
+///
+/// 涵盖账户数据同步、主题与外观配置、学习目标规划、离线发音人与数据备份管理。
 public struct SettingsHomeView: View {
     // 账户状态
     @State private var isLoggedIn: Bool = true
@@ -24,30 +23,21 @@ public struct SettingsHomeView: View {
         }
     }
 
-    // 学习设置 (100% 对齐 Android SettingsScreen.kt 参数)
+    // 学习设置配置
     @AppStorage("settings_daily_word_goal") private var dailyWordGoal: Int = 20
     @AppStorage("settings_daily_grammar_goal") private var dailyGrammarGoal: Int = 10
     @AppStorage("settings_learning_day_reset_hour") private var learningDayResetHour: Int = 4
     @AppStorage("settings_random_extract_new_content") private var isRandomNewContentEnabled: Bool = false
 
-    // 对齐 Android: listOf(5, 10, 20, 30, 50)
     private let wordGoalOptions: [Int] = [5, 10, 20, 30, 50]
-    // 对齐 Android: listOf(5, 10, 15, 20, 25)
     private let grammarGoalOptions: [Int] = [5, 10, 15, 20, 25]
-    // 对齐 Android: listOf(0, 2, 4, 5, 6)
     private let resetHourOptions: [(hour: Int, label: String)] = [
-        (0, "凌晨 0:00 (午夜)"),
-        (2, "凌晨 2:00"),
-        (4, "凌晨 4:00 (推荐)"),
-        (5, "凌晨 5:00"),
-        (6, "凌晨 6:00")
+        (0, "00:00"),
+        (2, "02:00"),
+        (4, "04:00"),
+        (5, "05:00"),
+        (6, "06:00")
     ]
-
-    // 语音发音
-    @State private var autoPlayTTS: Bool = true
-    @State private var ttsVoice: String = "Kyoko (系统原生 · 女声)"
-    @State private var ttsSpeed: Double = 1.0
-    private let voiceOptions = ["Kyoko (系统原生 · 女声)", "Otoya (系统原生 · 男声)", "Siri 日语音声"]
 
     public init() {}
 
@@ -65,7 +55,7 @@ public struct SettingsHomeView: View {
 
     public var body: some View {
         List {
-            // MARK: - 1. 账户与同步 (对齐 Android settings_section_title_account)
+            // MARK: - 账户与同步
             Section {
                 HStack(spacing: 12) {
                     Image(systemName: "person.crop.circle.fill")
@@ -89,13 +79,13 @@ public struct SettingsHomeView: View {
                 }
 
                 Button {
-                    // 备份至云端动作
+                    // TODO: 接入云端备份动作
                 } label: {
                     Label("备份至云端", systemImage: "icloud.and.arrow.up")
                 }
 
                 Button {
-                    // 备份历史动作
+                    // TODO: 接入云端备份历史
                 } label: {
                     Label("云端备份历史", systemImage: "clock.arrow.circlepath")
                 }
@@ -103,7 +93,7 @@ public struct SettingsHomeView: View {
                 NemoSectionHeader("账户与同步")
             }
 
-            // MARK: - 2. 主题与外观 (对齐 Android settings_section_title_appearance)
+            // MARK: - 主题与外观
             Section {
                 NavigationLink {
                     ThemeSettingsView()
@@ -126,20 +116,15 @@ public struct SettingsHomeView: View {
                 NemoSectionHeader("主题与外观")
             }
 
-            // MARK: - 3. 学习设置 (100% 对齐 Android settings_section_title_learning)
+            // MARK: - 学习设置
             Section {
-                // 1. 每日单词目标 (5, 10, 20, 30, 50)
+                // 1. 每日单词目标
                 HStack(spacing: 12) {
                     settingIcon(systemName: "target", color: .orange)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("每日单词目标")
-                            .font(.body)
-                            .foregroundStyle(.primary)
-                        Text("设置每天要学习的单词数量")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("每日单词目标")
+                        .font(.body)
+                        .foregroundStyle(.primary)
 
                     Spacer()
 
@@ -151,18 +136,13 @@ public struct SettingsHomeView: View {
                     .pickerStyle(.menu)
                 }
 
-                // 2. 每日语法目标 (5, 10, 15, 20, 25)
+                // 2. 每日语法目标
                 HStack(spacing: 12) {
                     settingIcon(systemName: "book.closed.fill", color: .green)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("每日语法目标")
-                            .font(.body)
-                            .foregroundStyle(.primary)
-                        Text("设置每天要学习的语法数量")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("每日语法目标")
+                        .font(.body)
+                        .foregroundStyle(.primary)
 
                     Spacer()
 
@@ -174,18 +154,13 @@ public struct SettingsHomeView: View {
                     .pickerStyle(.menu)
                 }
 
-                // 3. 学习日重置时间 (0, 2, 4, 5, 6)
+                // 3. 学习日重置时间
                 HStack(spacing: 12) {
                     settingIcon(systemName: "timer", color: .mint)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("学习日重置时间")
-                            .font(.body)
-                            .foregroundStyle(.primary)
-                        Text("零点跨天保护，过了此时间才算新的一天")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("学习日重置时间")
+                        .font(.body)
+                        .foregroundStyle(.primary)
 
                     Spacer()
 
@@ -197,18 +172,13 @@ public struct SettingsHomeView: View {
                     .pickerStyle(.menu)
                 }
 
-                // 4. 新内容乱序抽取 (Toggle)
+                // 4. 新内容乱序抽取
                 HStack(spacing: 12) {
                     settingIcon(systemName: "shuffle", color: .teal)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("新内容乱序抽取")
-                            .font(.body)
-                            .foregroundStyle(.primary)
-                        Text(isRandomNewContentEnabled ? "随机抽取新内容" : "按顺序抽取新内容")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("新内容乱序抽取")
+                        .font(.body)
+                        .foregroundStyle(.primary)
 
                     Spacer()
 
@@ -216,21 +186,16 @@ public struct SettingsHomeView: View {
                         .labelsHidden()
                 }
 
-                // 5. 记忆算法配置 (对齐 Android settings_item_title_algorithm)
+                // 5. 记忆算法配置
                 Button {
-                    // 进入记忆算法配置
+                    // TODO: 接入记忆算法配置页
                 } label: {
                     HStack(spacing: 12) {
                         settingIcon(systemName: "brain.head.profile", color: .purple)
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("记忆算法配置")
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                            Text("步进、提前复习与 Leech 策略")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text("记忆算法配置")
+                            .font(.body)
+                            .foregroundStyle(.primary)
 
                         Spacer()
 
@@ -241,21 +206,16 @@ public struct SettingsHomeView: View {
                 }
                 .buttonStyle(.plain)
 
-                // 6. AI 工坊配置 (对齐 Android settings_item_title_ai_workshop)
+                // 6. AI 工坊配置
                 Button {
-                    // 进入 AI 工坊配置
+                    // TODO: 接入 AI 工坊配置页
                 } label: {
                     HStack(spacing: 12) {
                         settingIcon(systemName: "sparkles", color: .blue)
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("AI 工坊配置")
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                            Text("设置 API Key 与 AI 模型")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text("AI 工坊配置")
+                            .font(.body)
+                            .foregroundStyle(.primary)
 
                         Spacer()
 
@@ -268,48 +228,40 @@ public struct SettingsHomeView: View {
             } header: {
                 NemoSectionHeader("学习设置")
             } footer: {
-                Text("学习目标与重置时点将影响每日新学分配与连续打卡统计。")
+                Text("学习目标与重置时点将影响每日新学分配。重置时间提供零点跨天保护，过了指定时点才计算新一天的打卡与任务。")
             }
 
-            // MARK: - 4. 语音发音 (对齐 Android settings_section_title_voice)
+            // MARK: - 语音设置
             Section {
-                Toggle(isOn: $autoPlayTTS) {
-                    Label("翻卡自动朗读", systemImage: "speaker.wave.2.fill")
-                }
-
-                Picker(selection: $ttsVoice) {
-                    ForEach(voiceOptions, id: \.self) { voice in
-                        Text(voice).tag(voice)
-                    }
+                NavigationLink {
+                    TtsSettingsView()
                 } label: {
-                    Label("发音人", systemImage: "person.wave.2.fill")
-                }
+                    HStack(spacing: 12) {
+                        settingIcon(systemName: "speaker.wave.2.fill", color: .pink)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Label("发音语速", systemImage: "gauge.with.needle.fill")
+                        Text("语音设置")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+
                         Spacer()
-                        Text(String(format: "%.1fx", ttsSpeed))
-                            .foregroundStyle(.secondary)
                     }
-                    Slider(value: $ttsSpeed, in: 0.5...2.0, step: 0.1)
                 }
             } header: {
-                NemoSectionHeader("语音发音")
+                NemoSectionHeader("语音设置")
             } footer: {
-                Text("优先使用 iOS 原生 AVSpeechSynthesizer 离线发音，零延迟、零流量消耗。")
+                Text("配置日语与中文发音人、朗读语速、音调以及翻卡自动朗读偏好。")
             }
 
-            // MARK: - 5. 数据管理 (对齐 Android settings_section_title_data)
+            // MARK: - 数据管理
             Section {
                 Button {
-                    // 导出数据
+                    // TODO: 接入导出学习数据交互
                 } label: {
                     Label("导出学习数据", systemImage: "square.and.arrow.up")
                 }
 
                 Button {
-                    // 导入数据
+                    // TODO: 接入导入学习数据交互
                 } label: {
                     Label("导入学习数据", systemImage: "square.and.arrow.down")
                 }
@@ -322,7 +274,7 @@ public struct SettingsHomeView: View {
                 }
 
                 Button(role: .destructive) {
-                    // 重置数据
+                    // TODO: 接入重置学习数据二次确认弹窗
                 } label: {
                     Label("重置学习数据", systemImage: "arrow.counterclockwise")
                         .foregroundStyle(.red)
@@ -331,9 +283,7 @@ public struct SettingsHomeView: View {
                 NemoSectionHeader("数据管理")
             }
 
-
-
-            // MARK: - 7. 关于 Nemo (对齐 Android settings_section_title_about)
+            // MARK: - 关于 Nemo
             Section {
                 HStack {
                     Label("应用版本", systemImage: "info.circle.fill")

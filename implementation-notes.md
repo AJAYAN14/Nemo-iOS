@@ -88,3 +88,60 @@
 - **自动编译与 GitHub 仓库全链路交付**：
   - 代码库已完全推送到 GitHub: `https://github.com/AJAYAN14/Nemo-iOS.git`；
   - Release IPA 已构建完成并导出至 `E:\Nemo\Nemo.ipa`。
+
+- **DocC 注释规范与纯血工程纯净性深度重构**：
+  - **核心红线清零**：全面清除了所有 Swift 源码中违反 `nemorules.md` 第 6.2 条的元说明，包括“100% 对齐 Android HomeScreen.kt”、“状态对齐 Android uiState”、“对应 Android LearningSummaryCard”、“100% 复用 Clash-Client”等全部搬运溯源注释；
+  - **Apple HIG / DocC 标准文档化**：为 `NemoApp`、`ContentView`、`NemoCard`、`NemoPressableButtonStyle`、`NemoSectionHeader` 以及各个页面与公共枚举（`AppTab`、`AppIconOption`、`ThemeAccentColorOption`、`SettingIconStyleOption` 等）补齐三斜线 `///` 规范注释与构造器 `- Parameters:` 结构化说明，原生支持 Xcode Quick Help 悬浮提示；
+  - **分类扩展文件独立抽离（DRY & 架构规范）**：
+    - 新增 `Core/UI/Extensions/Color+NemoTheme.swift`，集中管理系统级分组背景语义色（`nemoGroupedBackground`、`nemoSecondaryGroupedBackground`、`nemoTertiaryGroupedBackground`）；
+    - 新增 `Core/UI/Extensions/View+NemoStyles.swift`，集中管理主行动按钮修饰符（`nemoPrimaryActionButtonStyle`）与胶囊轮廓修饰符（`nemoCapsuleButtonBorderShape`）；
+  - **用户可见文案净化**：修复 `ThemeSettingsView.swift` 中暴露给用户的“对齐 Android 原生默认”为“经典冰蓝”，保持纯血 iOS 界面的自洽体验；
+  - **占位注释统一为 `// TODO:`**：统一为 Xcode 导航索引（Jump Bar）兼容的 `// TODO:` 标签。
+  - **深浅色模式切换生硬 Bug 彻底修复（原生 Window 交叉溶解）**：
+    - 针对 `@AppStorage` 跨页面丢失动画事务以及 `UIWindow.overrideUserInterfaceStyle` 默认 0ms 硬切的问题；
+    - 在 `NemoApp.swift` 根视图挂载 `.animation(.easeInOut(duration: 0.35), value: currentColorScheme)`；
+    - 在 `ThemeSettingsView.swift` 抽象统一的 `updateAppearance(to:)` 方法，直接触发原生 `UIView.transition(with: window, duration: 0.35, options: [.transitionCrossDissolve, .allowAnimatedContent])`；
+    - 机型预览卡片点击挂载 `.sensoryFeedback(.selection, trigger: isSelected)`，彻底实现 0.35 秒如融雪般的丝滑平滑过渡。
+  - **主题强调色全面升级为 Apple HIG 官方原生调色盘（方案一）**：
+    - 彻底淘汰原先单调生硬的 5 款安卓预设色彩，扩充为 10 款标准的 Apple HIG 系统级语义色（旗舰蓝、极光青、晨曦青、清爽薄荷、生机绿、璨金黄、活力橙、珊瑚红、樱花粉、赛博紫）；
+    - 将**默认主题色设定为经典的“旗舰蓝”**（`Color.blue`），与默认应用图标保持统一品牌调性；
+    - 布局升级为 2 排 × 5 列的自适应网格（`LazyVGrid`），点击附带弹簧形变与触觉微反馈。
+  - **设置项副标题彻底精炼（对齐 Apple Settings 极简单行规范）**：
+    - 彻底去除「每日单词目标」、「每日语法目标」、「新内容乱序抽取」、「学习日重置时间」、「记忆算法配置」、「AI 工坊」中的冗余行内副标题；
+    - 将「学习日重置时间」选项菜单中的中文描述彻底移除（由“凌晨 4:00 (推荐)”精简为国际标准纯净时间格式“00:00”、“02:00”、“04:00”、“05:00”、“06:00”）；
+    - 每一项列表行严格对齐为 44pt 统一黄金高度，彻底消灭挤压折行与高低参差；
+    - 将跨天重置等规则说明规范统一下沉至分区底部的 Section Footer 灰字通栏显示。
+  - **语音设置 100% 纯正苹果原生重构（TtsSettingsView）**：
+    - 在设置主页将语音分区收拢为极简单行导航入口「语音设置 >」；
+    - 针对用户“有原生的就用原生的，不要自己写”与“剔除私加的翻卡自动朗读”的严格指令：
+      1. **彻底移除“翻卡自动朗读”**：剔除无关状态与分区，保持语音设置职责单一纯净；
+      2. **零手写弹窗，全面采用 Apple 原生 `Picker(.navigationLink)`**：
+         - 日语音色与中文音色选择完全由系统托管生成原生二级单选页面；
+         - 动态加载 `AVSpeechSynthesisVoice.speechVoices()`，展示原生发音人名称与高保真标识，选中自动打钩回传；
+      3. **语速滑块全面采用 Apple HIG 官方原生规范**：
+         - 采用原生 `Slider`，两端标注 Apple 官方标准的乌龟（`Image(systemName: "tortoise.fill")`）与兔子（`Image(systemName: "hare.fill")`）；
+      4. **音调滑块与试听重置规范化**：
+         - 原生 `Slider` 搭配低高微调；
+         - 原生 `Button` 承载“试听日语发音”、“试听中文释义”与恢复默认设置；
+      5. 严格采用 Apple DocC（`///`）纯净注释，杜绝任何外部元说明与自造轮子。
+
+  - **iOS 27 / 现代 iOS 品牌启动屏高保真实现（NemoSplashView）**：
+    - **淘汰几年前老旧做法**：彻底摒弃静态图集（`LaunchImage` 废弃）、庞杂 Storyboard 历史包袱与主线程 `sleep` 恶习，拥抱现代 Xcode 自动生成冷启动屏与 SwiftUI 声明式动效接管；
+    - **100% 视觉对齐 Android 真实蓝本**：
+      1. **背景自适应**：浅色模式纯白（#FFFFFF），深色模式纯黑（#000000），与系统冷启动静态底色无缝像素级重合；
+      2. **中央深海呼吸光晕（Ambient Aurora Glow）**：460pt 画布配合 48pt Blur 与多阶平滑指数衰减双径向渐变（深色：深海蓝+青绿，浅色：天蓝+柔橙），以 4.2 秒周期平滑循环呼吸缩放（0.88 ~ 1.14）与微旋转（-4° ~ 6°）；
+      3. **四周 6 组漂浮小几何体（Floating Shapes）**：心形、空心三角、圆角方框等矢量路径（`HeartShape`、`TriangleShape`、`RoundedRectangle`）在 120ms~460ms 依次弹跳入场，随后进入各自独立周期（3.2s~4.0s）的微悬浮浮动与微旋转；
+      4. **中央 "Welcome!" 英文与微笑弧线**：8 个字符以 55ms 步进延时执行原生 Spring 弹跳（位移、缩放、微旋转、淡入），微笑贝塞尔弧线（`SmileArcShape`）顺滑描边生长；
+      5. **底部品牌锁（Brand Lockup）**：
+         - 提取并生成 512×512 高清矢量图集 `NemoSplashLogo.imageset`；
+         - 100ms 弹性弹出 -> 550ms Push 弹簧微抖（1.0 -> 0.9 -> 1.05 -> 1.0）并触发微触觉反馈（`.sensoryFeedback(.impact(weight: .light))`）；
+         - 同步展开间隙（14pt）、拉伸竖向分割线，并以遮罩平滑滑出加粗 32pt "Nemo" 英文；
+      6. **无缝平滑转场**：2.4 秒动效自然就位后，通过 `NemoApp.swift` 执行 0.45 秒优雅 Crossfade 进入 `ContentView`，底座视图预挂载杜绝任何丢帧闪烁；
+      7. **无障碍规范适配**：注入 `@Environment(\.accessibilityReduceMotion)`，当用户开启减弱动态效果时，跳过剧烈弹跳与浮动，优雅淡入并在 1.2 秒后轻柔过渡，严格遵循 Apple HIG 准则。
+
+
+
+
+
+
+

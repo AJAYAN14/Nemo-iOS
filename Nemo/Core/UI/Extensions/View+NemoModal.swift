@@ -60,6 +60,7 @@ public extension View {
                         NemoSheetCloseButton(dismiss: onClose)
                     }
                 }
+                .nemoTransparentNavigationBar()
         }
         .nemoModalPresentation(.page)
         .nemoSheetSurface()
@@ -81,6 +82,16 @@ public extension View {
         if #available(iOS 17.0, *) {
             self.listSectionSpacing(16)
                 .contentMargins(.top, 4, for: .scrollContent)
+        } else {
+            self
+        }
+    }
+
+    /// 导航栏背景完全透明穿透修饰符（严格对齐 Clash 客户端，向上滑动时背景全透明，无毛玻璃遮罩）
+    @ViewBuilder
+    func nemoTransparentNavigationBar() -> some View {
+        if #available(iOS 16.0, *) {
+            self.toolbarBackground(.hidden, for: .navigationBar)
         } else {
             self
         }

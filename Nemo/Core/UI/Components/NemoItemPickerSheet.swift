@@ -76,6 +76,7 @@ public struct NemoItemPickerSheet<Item: NemoPickerItem, TrailingAction: View>: V
                     NemoSheetCloseButton(dismiss: onClose)
                 }
             }
+            .nemoTransparentNavigationBar()
         }
         .nemoModalPresentation(.page)
         .nemoSheetSurface()

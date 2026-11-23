@@ -33,6 +33,40 @@ public actor DictionaryLocalStorage {
         fileManager.fileExists(atPath: grammarsFileURL.path)
     }
 
+    /// 获取本地已缓存的单词总数
+    public func getWordCount() -> Int {
+        guard let words = try? loadWords() else { return 0 }
+        return words.count
+    }
+
+    /// 获取本地已缓存的语法总数
+    public func getGrammarCount() -> Int {
+        guard let grammars = try? loadGrammars() else { return 0 }
+        return grammars.count
+    }
+
+    /// 增量更新或追加单词
+    public func upsertWords(_ newWords: [Word]) throws {
+        let currentWords = (try? loadWords()) ?? []
+        var wordMap = Dictionary(currentWords.map { ($0.id, $0) }, uniquingKeysWith: { _, new in new })
+        for word in newWords {
+            wordMap[word.id] = word
+        }
+        let merged = wordMap.values.sorted { $0.id < $1.id }
+        try saveWords(merged)
+    }
+
+    /// 增量更新或追加语法
+    public func upsertGrammars(_ newGrammars: [Grammar]) throws {
+        let currentGrammars = (try? loadGrammars()) ?? []
+        var grammarMap = Dictionary(currentGrammars.map { ($0.id, $0) }, uniquingKeysWith: { _, new in new })
+        for grammar in newGrammars {
+            grammarMap[grammar.id] = grammar
+        }
+        let merged = grammarMap.values.sorted { $0.id < $1.id }
+        try saveGrammars(merged)
+    }
+
     /// 持久化写入全量单词数据
     public func saveWords(_ words: [Word]) throws {
         let data = try JSONEncoder().encode(words)

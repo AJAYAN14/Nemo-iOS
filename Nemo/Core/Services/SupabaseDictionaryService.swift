@@ -143,4 +143,94 @@ public actor SupabaseDictionaryService {
 
         return allGrammars
     }
+
+    /// 增量拉取自指定时间戳以来更新的单词列表
+    public func fetchWordsModifiedSince(timestamp: String) async throws -> [Word] {
+        var allWords: [Word] = []
+        var offset = 0
+        let pageSize = 1000
+        let decoder = JSONDecoder()
+
+        guard let encodedTimestamp = timestamp.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return []
+        }
+
+        while true {
+            try Task.checkCancellation()
+
+            guard let url = URL(string: "\(endpoint)/dictionary_words?select=*&updated_at=gt.\(encodedTimestamp)&order=updated_at.asc") else {
+                break
+            }
+
+            var request = URLRequest(url: url)
+            request.setValue(apiKey, forHTTPHeaderField: "apikey")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            request.setValue("\(offset)-\(offset + pageSize - 1)", forHTTPHeaderField: "Range")
+            request.timeoutInterval = 30
+
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 || httpResponse.statusCode == 206 else {
+                throw URLError(.badServerResponse)
+            }
+
+            let batch = try decoder.decode([Word].self, from: data)
+            if batch.isEmpty {
+                break
+            }
+
+            allWords.append(contentsOf: batch)
+            if batch.count < pageSize {
+                break
+            }
+            offset += pageSize
+        }
+
+        return allWords
+    }
+
+    /// 增量拉取自指定时间戳以来更新的语法列表
+    public func fetchGrammarsModifiedSince(timestamp: String) async throws -> [Grammar] {
+        var allGrammars: [Grammar] = []
+        var offset = 0
+        let pageSize = 1000
+        let decoder = JSONDecoder()
+
+        guard let encodedTimestamp = timestamp.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return []
+        }
+
+        while true {
+            try Task.checkCancellation()
+
+            guard let url = URL(string: "\(endpoint)/dictionary_grammars?select=*&updated_at=gt.\(encodedTimestamp)&order=updated_at.asc") else {
+                break
+            }
+
+            var request = URLRequest(url: url)
+            request.setValue(apiKey, forHTTPHeaderField: "apikey")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            request.setValue("\(offset)-\(offset + pageSize - 1)", forHTTPHeaderField: "Range")
+            request.timeoutInterval = 30
+
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 || httpResponse.statusCode == 206 else {
+                throw URLError(.badServerResponse)
+            }
+
+            let batch = try decoder.decode([Grammar].self, from: data)
+            if batch.isEmpty {
+                break
+            }
+
+            allGrammars.append(contentsOf: batch)
+            if batch.count < pageSize {
+                break
+            }
+            offset += pageSize
+        }
+
+        return allGrammars
+    }
 }

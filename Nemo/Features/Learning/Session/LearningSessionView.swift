@@ -12,6 +12,7 @@ public struct LearningSessionView: View {
     @State private var store: LearningSessionStore
     @State private var showReportErrorSheet: Bool = false
     @State private var showLearningOverviewSheet: Bool = false
+    @State private var showTypingPracticeSheet: Bool = false
     private let mode: LearningHomeStore.LearningMode
     private let dailyGoal: Int
 
@@ -80,13 +81,17 @@ public struct LearningSessionView: View {
                                 store.revealAnswer()
                             },
                             onSpeakWord: {
-                                store.speak(text: word.japanese)
+                                store.speak(text: word.hiragana)
                             },
                             onSpeakText: { text in
                                 store.speak(text: text)
                             },
                             isPlayingAudio: store.isPlayingAudio,
-                            playingText: store.playingText
+                            playingText: store.playingText,
+                            onPracticeClick: {
+                                showTypingPracticeSheet = true
+                            },
+                            isWhiteboardEnabled: store.isWhiteboardEnabled
                         )
                     } else if store.mode == .grammar, let grammar = store.currentGrammar {
                         SRSGrammarCardView(
@@ -117,16 +122,8 @@ public struct LearningSessionView: View {
                     }
                 }
 
-                // 底部常驻 SRS 评价操作栏与白板浮层
+                // 底部常驻 SRS 评价操作栏
                 VStack(spacing: 8) {
-                    if store.isWhiteboardEnabled && hasActiveItem && !store.isSessionFinished {
-                        WhiteboardView(isEnabled: Binding(
-                            get: { store.isWhiteboardEnabled },
-                            set: { store.isWhiteboardEnabled = $0 }
-                        ))
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-
                     if hasActiveItem {
                         LearningSRSActionBar(
                             isFlipped: store.isAnswerShown,
@@ -249,6 +246,11 @@ public struct LearningSessionView: View {
                     store.reportContentError(errorType: errType, description: details)
                 }
             )
+        }
+        .sheet(isPresented: $showTypingPracticeSheet) {
+            if let word = store.currentWord {
+                TypingPracticeSheet(word: word)
+            }
         }
         .task {
             if store.wordsQueue.isEmpty && store.grammarsQueue.isEmpty {
@@ -439,105 +441,6 @@ public struct LearningSessionView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
-    }
-}
-
-/// 手写白板浮层
-struct WhiteboardView: View {
-    @Binding var isEnabled: Bool
-    @State private var currentPath: [CGPoint] = []
-    @State private var completedPaths: [[CGPoint]] = []
-
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Label("手写白板", systemImage: "pencil.tip")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                Button {
-                    completedPaths.removeAll()
-                    currentPath.removeAll()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "trash")
-                        Text("清空白板")
-                    }
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.secondary.opacity(0.1))
-                    .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    isEnabled = false
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.secondary)
-                        .padding(6)
-                        .background(Color.secondary.opacity(0.1))
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 12)
-            .padding(.top, 8)
-
-            Canvas { context, size in
-                for path in completedPaths {
-                    var bezier = Path()
-                    guard let first = path.first else { continue }
-                    bezier.move(to: first)
-                    for pt in path.dropFirst() {
-                        bezier.addLine(to: pt)
-                    }
-                    context.stroke(bezier, with: .color(Color.primary.opacity(0.85)), lineWidth: 3.5)
-                }
-
-                if let first = currentPath.first {
-                    var bezier = Path()
-                    bezier.move(to: first)
-                    for pt in currentPath.dropFirst() {
-                        bezier.addLine(to: pt)
-                    }
-                    context.stroke(bezier, with: .color(Color.primary.opacity(0.85)), lineWidth: 3.5)
-                }
-            }
-            .frame(height: 120)
-            .background(Color.primary.opacity(0.03))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-            )
-            .gesture(
-                DragGesture(minimumDistance: 0.1)
-                    .onChanged { value in
-                        currentPath.append(value.location)
-                    }
-                    .onEnded { _ in
-                        if !currentPath.isEmpty {
-                            completedPaths.append(currentPath)
-                            currentPath.removeAll()
-                        }
-                    }
-            )
-        }
-        .padding(12)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-        )
-        .padding(.horizontal, 16)
-        .shadow(color: Color.black.opacity(0.08), radius: 10, y: 4)
     }
 }
 

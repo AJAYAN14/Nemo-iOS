@@ -289,11 +289,12 @@ public final class LearningSessionStore {
 
     private func loadRealWordData(dailyGoal: Int, today: Int) async {
         do {
-            var allWords = try await dictionaryStorage.loadWords()
+            let allWords = try await dictionaryStorage.loadWords()
             if allWords.isEmpty {
-                allWords = LearningMockData.mockWords
+                finishEmptySession()
+                return
             }
-            let wordMap = Dictionary(uniqueKeysWithValues: allWords.map { ($0.id, $0) })
+            let wordMap = Dictionary(allWords.map { ($0.id, $0) }, uniquingKeysWith: { _, new in new })
 
             // 1. 读取到期待复习卡片
             let dueStates = try await learningStorage.getDueStudyStates(today: today)
@@ -309,7 +310,7 @@ public final class LearningSessionStore {
 
             // 2. 抽取未学新词（严格遵循 JLPT 等级进阶权重升序：N5 优先，同级按 ID 升序）
             let allStates = try await learningStorage.getAllStudyStates()
-            let neededNewCount = max(dailyGoal - sessionWords.count, 5)
+            let neededNewCount = max(dailyGoal - sessionWords.count, 0)
 
             let sortedWords = allWords.sorted { lhs, rhs in
                 if lhs.jlptLevel.sortOrder != rhs.jlptLevel.sortOrder {
@@ -318,35 +319,38 @@ public final class LearningSessionStore {
                 return lhs.id < rhs.id
             }
 
-            var newWordsFound = 0
-            for w in sortedWords {
-                guard newWordsFound < neededNewCount else { break }
-                if allStates[w.id] == nil {
-                    sessionWords.append(w)
-                    sessionTypes.append(.new)
-                    newWordsFound += 1
+            if neededNewCount > 0 {
+                var newWordsFound = 0
+                for w in sortedWords {
+                    guard newWordsFound < neededNewCount else { break }
+                    if allStates[w.id] == nil {
+                        sessionWords.append(w)
+                        sessionTypes.append(.new)
+                        newWordsFound += 1
+                    }
                 }
             }
 
-            // 3. 兜底
+            // 3. 对齐 Android SessionLoader：若无到期复习也无可学新词，直接优雅进入完成空状态
             if sessionWords.isEmpty {
-                sessionWords = Array(sortedWords.prefix(max(dailyGoal, 5)))
-                sessionTypes = Array(repeating: .review, count: sessionWords.count)
+                finishEmptySession()
+                return
             }
 
             setupWordSession(words: sessionWords, types: sessionTypes, today: today)
         } catch {
-            loadWords(LearningMockData.mockWords)
+            finishEmptySession()
         }
     }
 
     private func loadRealGrammarData(dailyGoal: Int, today: Int) async {
         do {
-            var allGrammars = try await dictionaryStorage.loadGrammars()
+            let allGrammars = try await dictionaryStorage.loadGrammars()
             if allGrammars.isEmpty {
-                allGrammars = LearningMockData.mockGrammars
+                finishEmptySession()
+                return
             }
-            let grammarMap = Dictionary(uniqueKeysWithValues: allGrammars.map { ($0.id, $0) })
+            let grammarMap = Dictionary(allGrammars.map { ($0.id, $0) }, uniquingKeysWith: { _, new in new })
 
             // 1. 读取到期待复习语法
             let dueStates = try await learningStorage.getDueGrammarStudyStates(today: today)
@@ -362,7 +366,7 @@ public final class LearningSessionStore {
 
             // 2. 抽取未学新语法（严格遵循 JLPT 等级进阶权重升序：N5 优先，同级按 ID 升序）
             let allStates = try await learningStorage.getAllGrammarStudyStates()
-            let neededNewCount = max(dailyGoal - sessionGrammars.count, 3)
+            let neededNewCount = max(dailyGoal - sessionGrammars.count, 0)
 
             let sortedGrammars = allGrammars.sorted { lhs, rhs in
                 if lhs.jlptLevel.sortOrder != rhs.jlptLevel.sortOrder {
@@ -371,26 +375,52 @@ public final class LearningSessionStore {
                 return lhs.id < rhs.id
             }
 
-            var newGrammarsFound = 0
-            for g in sortedGrammars {
-                guard newGrammarsFound < neededNewCount else { break }
-                if allStates[g.id] == nil {
-                    sessionGrammars.append(g)
-                    sessionTypes.append(.new)
-                    newGrammarsFound += 1
+            if neededNewCount > 0 {
+                var newGrammarsFound = 0
+                for g in sortedGrammars {
+                    guard newGrammarsFound < neededNewCount else { break }
+                    if allStates[g.id] == nil {
+                        sessionGrammars.append(g)
+                        sessionTypes.append(.new)
+                        newGrammarsFound += 1
+                    }
                 }
             }
 
-            // 3. 兜底
+            // 3. 对齐 Android SessionLoader：若无可学语法，直接优雅进入完成空状态
             if sessionGrammars.isEmpty {
-                sessionGrammars = Array(sortedGrammars.prefix(max(dailyGoal, 3)))
-                sessionTypes = Array(repeating: .review, count: sessionGrammars.count)
+                finishEmptySession()
+                return
             }
 
             setupGrammarSession(grammars: sessionGrammars, types: sessionTypes, today: today)
         } catch {
-            loadGrammars(LearningMockData.mockGrammars)
+            finishEmptySession()
         }
+    }
+
+    /// 对齐 Android SessionLoader 完成状态：无数据时优雅呈现完成看板，严禁注入假数据
+    private func finishEmptySession() {
+        self.wordsQueue = []
+        self.grammarsQueue = []
+        self.itemQueueTypes = []
+        self.totalSessionCount = 0
+        self.completedCount = 0
+        self.currentIndex = 0
+        self.isFlipped = false
+        self.isSessionFinished = true
+        self.queueCounts = QueueCountState()
+        let emptyStats = LearningSessionStats(
+            totalLearnedCount: 0,
+            newCount: 0,
+            reviewCount: 0,
+            relearnCount: 0,
+            maxCombo: 0,
+            durationSeconds: 0,
+            dailyStreak: 0
+        )
+        self.stats = emptyStats
+        self.status = .completed(stats: emptyStats)
     }
 
     private func setupWordSession(words: [Word], types: [LearningQueueType], today: Int) {
@@ -512,7 +542,7 @@ public final class LearningSessionStore {
 
         if isFlipped && isAutoAudioEnabled {
             if mode == .word, let word = currentWord {
-                speak(text: word.japanese)
+                speak(text: word.hiragana)
             } else if mode == .grammar, let grammar = currentGrammar {
                 speak(text: grammar.title)
             }
@@ -528,6 +558,10 @@ public final class LearningSessionStore {
 
     public func submitRating(_ quality: SRSRatingQuality) {
         guard case .learning = status else { return }
+
+        TtsSpeechService.shared.stop()
+        isPlayingAudio = false
+        playingText = nil
 
         saveUndoSnapshot()
         autoRevealTask?.cancel()
@@ -675,7 +709,6 @@ public final class LearningSessionStore {
     }
 
     public func speak(text: String) {
-        guard !isPlayingAudio else { return }
         self.isPlayingAudio = true
         self.playingText = text
 
@@ -683,10 +716,11 @@ public final class LearningSessionStore {
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         #endif
 
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
-            self.isPlayingAudio = false
-            self.playingText = nil
+        TtsSpeechService.shared.speak(text: text) { [weak self] in
+            Task { @MainActor in
+                self?.isPlayingAudio = false
+                self?.playingText = nil
+            }
         }
     }
 

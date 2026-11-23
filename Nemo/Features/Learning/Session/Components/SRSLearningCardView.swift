@@ -98,6 +98,10 @@ public struct SRSLearningCardView: View {
     public let isPlayingAudio: Bool
     public let playingText: String?
     public var onTrackClick: (() -> Void)?
+    public var onPracticeClick: (() -> Void)?
+    public var isWhiteboardEnabled: Bool
+
+    @State private var showInCardWhiteboard: Bool = false
 
     public init(
         word: Word,
@@ -110,7 +114,9 @@ public struct SRSLearningCardView: View {
         onSpeakText: @escaping (String) -> Void = { _ in },
         isPlayingAudio: Bool = false,
         playingText: String? = nil,
-        onTrackClick: (() -> Void)? = nil
+        onTrackClick: (() -> Void)? = nil,
+        onPracticeClick: (() -> Void)? = nil,
+        isWhiteboardEnabled: Bool = false
     ) {
         self.word = word
         self.isAnswerShown = isAnswerShown
@@ -123,6 +129,8 @@ public struct SRSLearningCardView: View {
         self.isPlayingAudio = isPlayingAudio
         self.playingText = playingText
         self.onTrackClick = onTrackClick
+        self.onPracticeClick = onPracticeClick
+        self.isWhiteboardEnabled = isWhiteboardEnabled
     }
 
     public var body: some View {
@@ -131,11 +139,34 @@ public struct SRSLearningCardView: View {
                 // 1. 上部【问题卡片】(Question Area)
                 questionCardSection
 
-                // 2. 中部【思考占位卡片】或【答案详情卡片】(Sticker / Answer Area)
+                // 2. 中部【思考占位/画板卡片】或【背面手写白板与答案详情卡片】
                 if !isAnswerShown {
-                    thinkPlaceholderSection
-                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    if isWhiteboardEnabled {
+                        NemoCardWhiteboardView(wordId: word.id, height: 380)
+                            .id(word.id)
+                            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    } else {
+                        thinkPlaceholderSection
+                            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    }
                 } else {
+                    if showInCardWhiteboard {
+                        NemoCardWhiteboardView(
+                            wordId: word.id,
+                            height: 380,
+                            onClose: {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                    showInCardWhiteboard = false
+                                }
+                            }
+                        )
+                        .id(word.id)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .offset(y: 20)),
+                            removal: .opacity
+                        ))
+                    }
+
                     answerDetailsSection
                         .transition(.asymmetric(
                             insertion: .opacity.combined(with: .offset(y: 20)),
@@ -148,6 +179,10 @@ public struct SRSLearningCardView: View {
             .padding(.bottom, 110) // 预留底部操作栏避让安全距离
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isAnswerShown)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showInCardWhiteboard)
+        .onChange(of: word.id) { _, _ in
+            showInCardWhiteboard = false
+        }
     }
 
     // MARK: - 1. 问题卡片 (Question Area)
@@ -274,22 +309,61 @@ public struct SRSLearningCardView: View {
 
                 Spacer()
 
-                // 单词朗读按钮 (44×44pt)
-                Button {
-                    onSpeakWord()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.12))
-                            .frame(width: 44, height: 44)
+                HStack(spacing: 8) {
+                    // 1. 单词朗读按钮 (44×44pt)
+                    let isWordAudioPlaying = isPlayingAudio && (playingText == word.japanese || playingText == word.hiragana)
+                    Button {
+                        onSpeakWord()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.blue.opacity(0.12))
+                                .frame(width: 44, height: 44)
 
-                        Image(systemName: isPlayingAudio && playingText == word.japanese ? "waveform" : "speaker.wave.2.fill")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(Color.blue)
-                            .symbolEffect(.pulse, isActive: isPlayingAudio && playingText == word.japanese)
+                            Image(systemName: isWordAudioPlaying ? "waveform" : "speaker.wave.2.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(Color.blue)
+                                .symbolEffect(.pulse, isActive: isWordAudioPlaying)
+                        }
                     }
+                    .buttonStyle(.plain)
+
+                    // 2. 跟打练习按钮 (44×44pt)
+                    if let practiceAction = onPracticeClick {
+                        Button {
+                            practiceAction()
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.purple.opacity(0.12))
+                                    .frame(width: 44, height: 44)
+
+                                Image(systemName: "character.textbox")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(Color.purple)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // 3. 快捷画板按钮 (44×44pt)
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            showInCardWhiteboard.toggle()
+                        }
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(showInCardWhiteboard ? Color.orange : Color.orange.opacity(0.12))
+                                .frame(width: 44, height: 44)
+
+                            Image(systemName: "pencil.and.scribble")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(showInCardWhiteboard ? Color.white : Color.orange)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
 
             Divider()

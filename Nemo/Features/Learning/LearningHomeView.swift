@@ -9,40 +9,17 @@ import SwiftUI
 ///
 /// 承载每日学习打卡状态、核心指标便当盒看板（Bento Grid）以及多维日语学习资源入口。
 public struct LearningHomeView: View {
-    /// 学习内容模式枚举
-    public enum LearningMode: String, CaseIterable, Identifiable {
-        /// 单词学习模式
-        case word = "单词"
-        /// 语法学习模式
-        case grammar = "语法"
+    @State private var store = LearningHomeStore()
 
-        public var id: String { rawValue }
-    }
+    // 监听持久化设置项
+    @AppStorage("settings_daily_word_goal") private var storedWordGoal: Int = 20
+    @AppStorage("settings_daily_grammar_goal") private var storedGrammarGoal: Int = 10
+    @AppStorage("settings_learning_day_reset_hour") private var storedResetHour: Int = 4
 
-    @State private var learningMode: LearningMode = .word
-    @State private var dailyStreak: Int = 12
-    @State private var currentProgress: Int = 15      // 今日新学完成数
-    @State private var dailyGoal: Int = 20            // 新学目标
-    @State private var reviewedToday: Int = 18        // 今日已复习数
-    @State private var itemsDue: Int = 14             // 待复习未完成数
-    @State private var dailyCompletionRate: Int = 75  // 达成率百分比
     @State private var username: String = "Nemo"
-
-    /// 是否已开始今日学习
-    private var isLearned: Bool { currentProgress > 0 }
+    @State private var navigateToSession: Bool = false
 
     public init() {}
-
-    /// 今日需复习的总条目数
-    private var totalReviewItems: Int {
-        reviewedToday + itemsDue
-    }
-
-    /// 今日新学进度占比（0.0 至 1.0）
-    private var progressFraction: Double {
-        guard dailyGoal > 0 else { return 0.0 }
-        return min(Double(currentProgress) / Double(dailyGoal), 1.0)
-    }
 
     /// 根据当前时段动态生成的副标题问候语
     private var subGreeting: String {
@@ -57,11 +34,6 @@ public struct LearningHomeView: View {
         default:
             return "夜深了，学完这一组早点休息哦"
         }
-    }
-
-    /// 当前模式对应的主题强调色
-    private var primaryModeColor: Color {
-        learningMode == .word ? Color.orange : Color.green
     }
 
     public var body: some View {
@@ -81,6 +53,35 @@ public struct LearningHomeView: View {
         }
         .background(Color.nemoGroupedBackground)
         .toolbar(.hidden, for: .navigationBar)
+        .task {
+            store.syncSettings(
+                wordGoal: storedWordGoal,
+                grammarGoal: storedGrammarGoal,
+                resetHour: storedResetHour
+            )
+            await store.refreshStats()
+        }
+        .onChange(of: storedWordGoal) { _, newValue in
+            store.dailyWordGoal = newValue
+        }
+        .onChange(of: storedGrammarGoal) { _, newValue in
+            store.dailyGrammarGoal = newValue
+        }
+        .onChange(of: storedResetHour) { _, newValue in
+            store.resetHour = newValue
+            Task { await store.refreshStats() }
+        }
+        .onAppear {
+            Task {
+                await store.refreshStats()
+            }
+        }
+        .navigationDestination(isPresented: $navigateToSession) {
+            LearningSessionView(
+                mode: store.learningMode,
+                dailyGoal: store.currentGoal
+            )
+        }
     }
 
     // MARK: - 顶部问候栏
@@ -101,14 +102,14 @@ public struct LearningHomeView: View {
             // 用户头像
             ZStack {
                 Circle()
-                    .fill(primaryModeColor.opacity(0.15))
+                    .fill(store.primaryModeColor.opacity(0.15))
                     .frame(width: 44, height: 44)
 
                 Image(systemName: "person.crop.circle.fill")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 40, height: 40)
-                    .foregroundStyle(primaryModeColor)
+                    .foregroundStyle(store.primaryModeColor)
             }
             .overlay(
                 Circle()
@@ -129,7 +130,7 @@ public struct LearningHomeView: View {
                         Image(systemName: "flame.fill")
                             .foregroundStyle(.orange)
                             .font(.subheadline)
-                        Text("\(dailyStreak) 天")
+                        Text("\(store.dailyStreak) 天")
                             .font(.system(.subheadline, design: .rounded, weight: .bold))
                             .foregroundStyle(.primary)
                     }
@@ -141,8 +142,8 @@ public struct LearningHomeView: View {
                     Spacer()
 
                     // 单词 / 语法分段选择器
-                    Picker("模式", selection: $learningMode) {
-                        ForEach(LearningMode.allCases) { mode in
+                    Picker("模式", selection: $store.learningMode) {
+                        ForEach(LearningHomeStore.LearningMode.allCases) { mode in
                             Text(mode.rawValue).tag(mode)
                         }
                     }
@@ -164,21 +165,21 @@ public struct LearningHomeView: View {
                             Spacer(minLength: 8)
 
                             // 环形进度指示器（采用 Apple 原生 Gauge 控件）
-                            Gauge(value: progressFraction, in: 0...1) {
+                            Gauge(value: store.progressFraction, in: 0...1) {
                                 Text("今日新学进度")
                             } currentValueLabel: {
-                                Text("\(currentProgress)")
+                                Text("\(store.currentProgress)")
                                     .font(.system(size: 30, weight: .bold, design: .rounded))
                                     .foregroundStyle(.primary)
                             }
                             .gaugeStyle(.accessoryCircularCapacity)
-                            .tint(primaryModeColor)
+                            .tint(store.primaryModeColor)
                             .scaleEffect(1.6)
                             .frame(width: 92, height: 92)
 
                             Spacer(minLength: 8)
 
-                            Text("新学目标 \(dailyGoal)")
+                            Text("新学目标 \(store.currentGoal)")
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
                         }
@@ -201,10 +202,10 @@ public struct LearningHomeView: View {
                                 }
 
                                 HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                    Text("\(reviewedToday)")
+                                    Text("\(store.reviewedToday)")
                                         .font(.system(size: 24, weight: .bold, design: .rounded))
                                         .foregroundStyle(.primary)
-                                    Text("/\(totalReviewItems)")
+                                    Text("/\(store.totalReviewItems)")
                                         .font(.system(size: 16, weight: .bold, design: .rounded))
                                         .foregroundStyle(.secondary)
                                 }
@@ -229,7 +230,7 @@ public struct LearningHomeView: View {
                                 }
 
                                 HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                    Text("\(dailyCompletionRate)")
+                                    Text("\(store.dailyCompletionRate)")
                                         .font(.system(size: 24, weight: .bold, design: .rounded))
                                         .foregroundStyle(.primary)
                                     Text("%")
@@ -250,14 +251,14 @@ public struct LearningHomeView: View {
 
             // 底部主行动胶囊按钮
             Button {
-                // TODO: 接入开始学习交互流程
+                navigateToSession = true
             } label: {
                 HStack(spacing: 6) {
-                    Text(isLearned ? "继续学习" : "立即开始")
+                    Text(store.isLearned ? "继续学习" : "立即开始")
                         .font(.headline.weight(.bold))
                         .lineLimit(1)
 
-                    Image(systemName: isLearned ? "arrow.right" : "play.fill")
+                    Image(systemName: store.isLearned ? "arrow.right" : "play.fill")
                         .font(.subheadline.weight(.bold))
                 }
                 .frame(maxWidth: .infinity, minHeight: 38)
@@ -265,7 +266,7 @@ public struct LearningHomeView: View {
             .nemoPrimaryActionButtonStyle()
             .nemoCapsuleButtonBorderShape()
             .controlSize(.large)
-            .tint(primaryModeColor)
+            .tint(store.primaryModeColor)
         }
     }
 
@@ -277,7 +278,7 @@ public struct LearningHomeView: View {
 
             // 全宽卡片：学习足迹热力图
             Button {
-                // TODO: 接入学习足迹热力图详情页
+                // 热力图详情页入口
             } label: {
                 NemoCard(cornerRadius: 20, padding: 16) {
                     HStack(spacing: 14) {

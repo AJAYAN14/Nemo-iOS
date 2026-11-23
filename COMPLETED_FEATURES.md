@@ -1,10 +1,64 @@
 # Nemo iOS 已实现功能与架构全景档案 (Completed Features Specification)
 
 > **文档定位**：本文件记录 Nemo iOS 工程自立项起已完整实现、编译通过并验证交付的所有功能、界面结构、设计参数、资源配置及底层架构。**供后续开发与 AI 审查直接读取，无需重复逐行排查已有代码**。
-> **最后更新时间**：2026-11-22
-> **工程版本**：Nemo 1.0.0 Dev (Build 2601) / 对齐 Android Nemo 2.0 架构
+> **最后更新时间**：2026-11-23
+> **工程版本**：Nemo 1.0.0 Dev (Build 2603) / 对齐 Android Nemo 2.0 架构
 > **代码仓库**：[https://github.com/AJAYAN14/Nemo-iOS](https://github.com/AJAYAN14/Nemo-iOS) (branch: `main`)
-> **本地产物**：`E:\Nemo\Nemo.ipa` (Release 无签名 IPA，支持爱思助手个人证书签名自装)
+> **本地产物**：`E:\Nemo\Nemo.ipa` (Release 无签名 IPA，大小 9,600,872 字节)
+
+---
+
+## 零、核心学习会话与 FSRS 记忆算法完整流转闭环 (`Core/Algorithm/`, `Core/Storage/`, `Features/Learning/Session/`, 2026-11-23)
+
+### 1. 纯正原生 FSRS / SRS 算法引擎 (`Core/Algorithm/`)
+* **FSRS 记忆算法数学模型 (`FsrsAlgorithm.swift` & `FsrsModels.swift`)**：
+  - 100% 移植并对齐 Android 端 `FsrsAlgorithm.kt`；
+  - 采用 21 项浮点权重参数模型，实现初次稳定性计算、难度衰减、负幂遗忘曲线与记忆可提取性（Retrievability）动态推导；
+  - 内置双层数值越界防护钳制（防止 `NaN` 与 `isInfinite`），并严格执行 `Hard <= Good <= Easy` 强单调性数学约束；
+* **间隔推演与下一次复习预测 (`SrsCalculatorImpl.swift`)**：
+  - 驱动 `SrsCalculatorProtocol` 协议，根据卡片历史状态推演四档评价（Again / Hard / Good / Easy）对应的新状态；
+  - 在卡片翻面时毫秒级生成四档下次复习间隔文案（如“10分钟”、“1天”、“4天”）。
+
+### 2. 本地持久化与学习进度状态引擎 (`Core/Storage/` & `Core/Models/`)
+* **领域模型 (`WordStudyState.swift` & `StudyDailyRecord.swift`)**：
+  - 精确映射卡片学习状态（稳定性、难度、已复习次数、上次复习日、下次复习日、学习队列类型等）与每日打卡记录；
+* **线程安全 Actor 存储 (`LearningLocalStorage.swift`)**：
+  - 采用 Swift 原生 `actor` 并发隔离，内存常驻哈希字典索引（实现 $O(1)$ 极速读取）；
+  - 磁盘写盘采用 `Data.write(to:options: [.atomic])` 原生原子替换，杜绝断电导致的数据损坏；
+  - 提供连续打卡天数（Streak Days）计算与当日到期待复习卡片检索。
+
+### 3. 学习界面真实离线词库抽取与答题闭环 (`Features/Learning/Session/`)
+* **告别 Mock 假数据，接入 9,800+ 离线词库**：
+  - `LearningSessionStore.swift` 注入 `DictionaryLocalStorage` 与 `LearningLocalStorage`，通过 `loadRealSessionData()` 自动合并“今日到期复习卡片”与“未学新词卡片”组装每日队列；
+  - 学习会话视图 `LearningSessionView.swift` 挂载 `.task` 异步生命周期，进入学习界面即刻异步加载真实词库；
+  - 用户提交打卡评价（`submitRating`）时，调用 FSRS 推演并持久化存盘，学习结算战报展示真实掌握数据。
+
+### 4. 主学习会话卡片（100% 对齐 Android `SRSLearningCard` 架构）
+* **上下双卡片流式展开 (`SRSLearningCardView.swift`)**：
+  - **上部【问题卡片】**：顶栏三段式（JLPT 徽章 + 400米跑道进度指示条 + 状态徽章），中央呈现 48pt Heavy 衬线体汉字大字与读音思考提示（展开答案后点亮 20pt 蓝色平假名）；
+  - **中部【思考占位卡片】**：未显示答案时展示，采用 `DotMatrixBackgroundView` 点阵网格配合中央正圆呼吸避让与 78pt 灵感灯泡图标；
+  - **下部【答案详情卡片】**：点击显示答案时平滑垂直滑出词性微胶囊、44pt 单词独立发音按钮、中文释义与最多 3 组双语精选例句（带句级发音按钮）；
+* **专项练习 3D 翻转卡片资产保留 (`LearningWordCardView.swift`)**：
+  - 保留 0° ↔ 180° 双面 3D 翻转卡片，作为后续专项分类词汇/闪卡浏览（`CategoryCardBrowseScreen`）的专用资产。
+* **跑道赛道学习进度条 (`LearningTrackProgressIndicator.swift`)**：
+  - 1:1 对齐 Android 端 130×34pt 跑道胶囊；
+  - 顺时针圆头推进几何（`LearningTrackShape`）；
+  - 内场集成四态队列计数（新学/在学/复习/重学），0 态自动半透明弱化。
+* **SRS 4 档评价操作栏 (`LearningSRSActionBar.swift` & `LearningSRSRatingButton.swift`)**：
+  - 正面状态：展示“显示答案”通栏胶囊主行动按钮；
+  - 翻面状态：平滑交叉过渡为 4 档均分评分按钮（重来 / 困难 / 良好 / 简单）；
+  - 按钮包含上部评分标题与下部下次复习间隔预估标签（如“10分钟”、“1天”、“4天”），点击联动系统触觉震动反馈。
+* **结算战报看板 (`LearningFinishedView.swift`)**：
+  - 会话出清后展示 56pt Hero 结算大数字、三段掌握度进度条以及便当盒（Bento Grid）战报卡片（学习耗时、掌握率、待复习项）；
+  - 提供“完成并返回”与“再来一组”操作按钮。
+* **状态中枢与 Mock 数据 (`LearningSessionStore.swift` & `LearningMockData.swift`)**：
+  - 采用 `@MainActor @Observable` 纯原生状态中枢；
+  - 包含原子级防抖与异步竞态锁（`isProcessingAction`），彻底根治快速连击跳词；
+  - 配备 12 组地道双语例句假数据，各组件与全屏视图均具备开箱即用的独立 SwiftUI `#Preview`；
+  - 学习主页 `LearningHomeView.swift` 底部主行动入口通过 `.fullScreenCover` 无缝接入。
+* **自动化构建与真机产物**：
+  - VMware macOS 虚拟机 Release 构建 0 报错通过；
+  - 成功生成产物 `E:\Nemo\Nemo.ipa`（9,486,903 字节）。
 
 ---
 
@@ -340,3 +394,84 @@ E:\Nemo\iOS\Nemo\
 * **编译状态**：`xcodebuild Release` 0 报错通过；
 * **交付产物**：`E:\Nemo\Nemo.ipa`（最新构建包约 8.9 MB）。
 
+
+
+---
+
+## 七、词库云端同步（Supabase）与单词/语法列表全景实现 (2026-11-22)
+
+### 1. 核心架构与并发安全（Swift 6 Strict Concurrency）
+* **领域模型（Domain Models）**：
+  - `Word.swift`、`Grammar.swift`、`JLPTLevel.swift`、`SyncMeta.swift` 全量遵循 `Sendable, Codable, Identifiable, Hashable`；
+  - 严格映射云端 JSON 结构体并提供本地多维模糊匹配方法（`matches(query:)`）。
+* **Supabase REST 云端同步服务（`SupabaseDictionaryService.swift`）**：
+  - 纯原生 `URLSession`，100% 摆脱冗重第三方依赖；
+  - 支持 `Range` 头分批并发拉取 `dictionary_words`（9,800+ 词条）与 `dictionary_grammars`（740+ 条目）；
+  - 带有取消检查（`Task.checkCancellation()`）与实时进度闭包回调。
+* **沙盒持久化隔离层（`DictionaryLocalStorage.swift`）**：
+  - 使用 Swift `actor` 实现并发读写安全，独立运行于后台全局协作线程池，彻底解除主线程 I/O 阻塞；
+  - 统一在 `Application Support/NemoDictionary/` 目录下持久化存储二进制/JSON 数据包。
+
+### 2. 界面表现与 Apple HIG 规范
+* **大体量单元格复用机制（WWDC 推荐范式）**：
+  - 采用原生 `List` 搭配自定义卡片，废弃长列表下持续堆积内存的 `LazyVStack`，确保 9,800+ 词条在 120Hz ProMotion 下顺滑滚动且内存恒定平稳。
+* **单词列表（`WordListView.swift`）**：
+  - 顶置 N1~N5 + 全部 横向滑动胶囊分段栏（橙色选中态，伴随系统触觉震动反馈）；
+  - 原生 `.searchable` 即时模糊搜索框（支持对日文汉字、假名及中文释义的多维快速匹配）；
+  - 单词卡片（`WordListItemView.swift`）：精致衬线体日文汉字、假名注音、词性微胶囊标签、JLPT 彩色微徽章与中文释义；
+  - 原生 `.refreshable` 下拉触发增量同步；
+  - 原生 `DictionarySkeletonView.swift` 骨架加载屏。
+* **语法列表（`GrammarListView.swift`）**：
+  - 顶置 N1~N5 胶囊选择器（靛紫色选中态）；
+  - 语法卡片（`GrammarListItemView.swift`）：语法句型、接续形式、核心中文说明；
+  - 完整的本地模糊搜索与下拉增量同步支持。
+* **进度大厅路由打通（`ProgressHomeView.swift`）**：
+  - 将“资料与词库”分区的“单词列表”与“语法列表”升级为原生 `NavigationLink` 驱动。
+
+### 3. 构建与交付产物
+* **自动化流水线验证**：`build_ios.ps1` 驱动 macOS 虚拟机无签名 Release 归档与组装；
+* **编译状态**：Swift 6 严格模式下 0 报错通过；
+* **交付产物**：`E:\Nemo\Nemo.ipa`（最新构建包约 9.2 MB，支持爱思助手个人证书签名自装）。
+
+
+### 4. 界面设计深度复刻（100% 对齐 Android Nemo 规范）与底栏生命周期优化 (2026-11-22)
+* **单词与语法列表卡片深度复刻**：
+  - **左侧 50×50 pt 艺术字头像框**：G2 连续平滑圆角 16pt，集成 8 色调色板（`AvatarPalette`）柔和半透底色，单词列表显示日文首汉字（Heavy 900 衬线体，22pt），语法列表显示“文”字徽章；
+  - **双行文本对齐**：日文汉字标题（17pt 衬线粗体）+ 词性微胶囊标签，第二行展示 `假名 · 中文释义`；
+  - **右侧等级徽章**：8pt 连续圆角微卡片，采用粗黑斜体（Italic + Black 900）高亮对应 JLPT 等级。
+* **顶栏导航与动态标题**：
+  - 左侧采用 38×38 pt 圆形高光毛玻璃返回按钮；
+  - 动态标题联动：未选分级时显示“单词列表/语法列表”，选中分级时动态联动展示“单词列表 (N1)”；
+  - 右侧挂载数量微徽章（`9,876 词` / `741 条`）。
+* **底栏（TabBar）智能收起调度（hidesBottomBarWhenPushed）**：
+  - 严格落实**“导航底栏仅在四个主界面出现，进入二级页面智能隐藏”**；
+  - `WordListView` 与 `GrammarListView` 采用苹果物理弹簧动画调度 `.toolbar(isTabBarHidden ? .hidden : .visible, for: .tabBar)`，进入子页面时底栏自然平滑下沉隐去，返回时自然回弹。
+
+
+### 5. 词库菜单（Menu）与搜索（DiscoveryBar）原生组件深度复刻 (2026-11-22)
+* **分级菜单组件（`NemoLevelMenuButton.swift`）**：
+  - 100% 对齐 Android `LibraryLevelSelectionButton` 交互；
+  - 放置在导航栏右上角，呈现 36pt 高光磨砂微胶囊；
+  - 点击呼出原生系统级 `Menu`，按难度倒序展示各等级条目数（如 `N5 (520 词)`、`N1 (1,550 词)`）与选中对勾；
+  - 选中等级即时触发系统触觉反馈，且顶栏大标题同步联动（如 `单词列表 (N2)`）。
+* **探索与搜索组件（`NemoDiscoveryBar.swift`）**：
+  - 100% 对齐 Android `DiscoveryBar` 变形容器交互；
+  - **默认态**：左侧 48×48 pt 独立圆形搜索按钮 + 右侧三段式学习状态滑动胶囊（`全部` / `已掌握` / `待学习`）；
+  - **搜索态**：左侧平滑变形展开为全宽搜索输入框，右侧平滑缩放出圆形 `xmark` 关闭取消按钮；
+  - 彻底淘汰了此前系统默认的通栏 `.searchable`，带来 100% 与 Android 原生一致的交互动效。
+
+
+### 6. 全面清除手写非标胶水层，100% 坚守 Apple 官方原生控件体系治理 (2026-11-22)
+* **执行“有原生的就用原生的，绝不重复造轮子”工程铁律**：
+  - 彻底清理自建的非标胶水组件（删除 `NemoDiscoveryBar.swift` 与 `NemoLevelMenuButton.swift`）；
+  - **原生返回与侧滑手势**：恢复原生 Navigation 返回按钮与边缘滑动返回手势，彻底淘汰手画按钮；
+  - **原生搜索体系**：采用 Apple 原生标准 `.searchable`，系统导航抽屉统一接管动画与焦点；
+  - **原生分段控件**：状态切换采用 Apple 原生 `Picker.pickerStyle(.segmented)`；
+  - **原生工具栏筛选菜单**：采用 Apple 标准 `Menu` 搭配 HIG 规范图标 `line.3.horizontal.decrease.circle`；
+  - **底栏智能调度**：保持物理弹簧调度，确保底栏导航栏只在四个主界面出现，进入二级页面无痕收起。
+
+
+- **列表项弹性入场动效与磨砂回顶悬浮按钮（2026-11-22）**：
+  - 对齐 Android `animateListItem`：新增 `ListItemEntranceAnimation.swift`，首次滑入时触发淡入（0.08->1.0）、微缩放（0.90->1.0）与 18pt 上移弹簧动画。
+  - 对齐 Android `LibraryScrollToTopButton`：新增 `LibraryScrollToTopButton.swift`，采用 48pt 超薄毛玻璃圆形悬浮按钮，列表滑过第 6 项时伴随弹簧动效浮现，点击平滑滚回顶部锚点并附带轻触反馈。
+  - 最新 Release IPA 验证生成：`E:\Nemo\Nemo.ipa`（9,330,109 字节，xcodebuild 0 报错通过）。

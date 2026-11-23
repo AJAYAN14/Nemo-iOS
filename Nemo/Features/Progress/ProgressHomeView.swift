@@ -111,21 +111,25 @@ public struct ProgressHomeView: View {
 
             NemoCard(cornerRadius: 20, padding: 8) {
                 VStack(spacing: 0) {
-                    dashboardItemRow(
+                    dashboardNavigationRow(
                         icon: "textformat.abc",
                         tint: .orange,
                         title: "单词列表",
                         subtitle: "浏览所有已录入单词",
                         showDivider: true
-                    )
+                    ) {
+                        WordListView()
+                    }
 
-                    dashboardItemRow(
+                    dashboardNavigationRow(
                         icon: "book.pages.fill",
                         tint: .indigo,
                         title: "语法列表",
                         subtitle: "浏览所有日语语法条目",
                         showDivider: true
-                    )
+                    ) {
+                        GrammarListView()
+                    }
 
                     dashboardItemRow(
                         icon: "square.grid.2x2.fill",
@@ -177,6 +181,59 @@ public struct ProgressHomeView: View {
     private func sectionHeader(_ title: String) -> some View {
         NemoSectionHeader(title)
             .padding(.horizontal, 4)
+    }
+
+    private func dashboardNavigationRow<Destination: View>(
+        icon: String,
+        tint: Color,
+        title: String,
+        subtitle: String,
+        showDivider: Bool,
+        @ViewBuilder destination: () -> Destination
+    ) -> some View {
+        VStack(spacing: 0) {
+            NavigationLink(destination: destination) {
+                HStack(spacing: 12) {
+                    // 图标徽章：29x29 pt，G2 连续平滑圆角 9 pt
+                    Image(systemName: icon)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 29, height: 29)
+                        .background(
+                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                .fill(tint)
+                        )
+
+                    // 标题与副标题排版：17 pt 标题搭配 13 pt 脚注说明
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(title)
+                            .font(.body)
+                            .foregroundStyle(.primary)
+
+                        Text(subtitle)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    // 右侧导航展开箭头
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .frame(minHeight: 63)
+            }
+            .buttonStyle(.nemoPressable)
+
+            if showDivider {
+                // 8(边距) + 29(图标宽) + 12(间距) = 49 pt，精确对齐文字左侧边缘
+                Divider()
+                    .padding(.leading, 49)
+            }
+        }
     }
 
     private func dashboardItemRow(

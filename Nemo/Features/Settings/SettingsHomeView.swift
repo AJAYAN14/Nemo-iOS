@@ -9,9 +9,10 @@ import SwiftUI
 ///
 /// 涵盖账户数据同步、主题与外观配置、学习目标规划、离线发音人与数据备份管理。
 public struct SettingsHomeView: View {
-    // 账户状态
-    @State private var isLoggedIn: Bool = true
-    @State private var username: String = "Nemo"
+    // 认证与会话状态
+    @Environment(AuthStore.self) private var authStore
+    @State private var isLoginSheetPresented: Bool = false
+    @State private var isLogoutAlertPresented: Bool = false
 
     // 主题外观
     @AppStorage("settings_dark_mode_option") private var storedDarkMode: String = "auto"
@@ -57,29 +58,54 @@ public struct SettingsHomeView: View {
         List {
             // MARK: - 账户与同步
             Section {
-                HStack(spacing: 12) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.system(size: 36))
-                        .foregroundStyle(.blue)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(isLoggedIn ? username : "未登录")
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                        Text(isLoggedIn ? "账号同步已开启" : "点击登录以同步学习数据")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                Button {
+                    if !authStore.isLoggedIn {
+                        isLoginSheetPresented = true
                     }
+                } label: {
+                    HStack(spacing: 12) {
+                        if let avatarUrlString = authStore.currentUser?.avatarUrl,
+                           let url = URL(string: avatarUrlString) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 36, height: 36)
+                                        .clipShape(Circle())
+                                default:
+                                    Image(systemName: "person.crop.circle.fill")
+                                        .font(.system(size: 36))
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 36))
+                                .foregroundStyle(.blue)
+                        }
 
-                    Spacer()
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(authStore.isLoggedIn ? (authStore.currentUser?.username ?? "Nemo 用户") : "未登录")
+                                .font(.headline)
+                                .foregroundStyle(Color.primary)
+                            Text(authStore.isLoggedIn ? (authStore.currentUser?.email ?? "账号同步已开启") : "点击登录以同步学习数据")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                        }
 
-                    Image(systemName: "chevron.right")
-                        .font(.caption.bold())
-                        .foregroundStyle(.tertiary)
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.bold())
+                            .foregroundStyle(Color.secondary.opacity(0.6))
+                    }
                 }
+                .buttonStyle(.plain)
 
                 Button {
-                    // TODO: 接入云端备份动作
+                    // 接入云端备份动作
                 } label: {
                     Label("备份至云端", systemImage: "icloud.and.arrow.up")
                 }
@@ -274,10 +300,19 @@ public struct SettingsHomeView: View {
                 }
 
                 Button(role: .destructive) {
-                    // TODO: 接入重置学习数据二次确认弹窗
+                    // 接入重置学习数据二次确认弹窗
                 } label: {
                     Label("重置学习数据", systemImage: "arrow.counterclockwise")
                         .foregroundStyle(.red)
+                }
+
+                if authStore.isLoggedIn {
+                    Button(role: .destructive) {
+                        isLogoutAlertPresented = true
+                    } label: {
+                        Label("退出登录", systemImage: "rectangle.portrait.and.arrow.right")
+                            .foregroundStyle(.red)
+                    }
                 }
             } header: {
                 NemoSectionHeader("数据管理")
@@ -315,11 +350,25 @@ public struct SettingsHomeView: View {
         .nemoTopAppBarEffect()
         .navigationTitle("个人")
         .navigationBarTitleDisplayMode(.large)
+        .sheet(isPresented: $isLoginSheetPresented) {
+            LoginScreenView()
+        }
+        .alert("退出登录", isPresented: $isLogoutAlertPresented) {
+            Button("取消", role: .cancel) {}
+            Button("退出", role: .destructive) {
+                Task {
+                    await authStore.logout()
+                }
+            }
+        } message: {
+            Text("确定要退出当前登录账号吗？本地离线缓存将受到保护。")
+        }
     }
 }
 
 #Preview {
     NavigationStack {
         SettingsHomeView()
+            .environment(AuthStore())
     }
 }

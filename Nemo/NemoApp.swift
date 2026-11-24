@@ -15,8 +15,16 @@ struct NemoApp: App {
     @AppStorage("settings_dark_start_time") private var darkModeStartTime: String = "21:00"
     @AppStorage("settings_dark_end_time") private var darkModeEndTime: String = "07:00"
 
-    /// 控制启动开屏动画的生命周期展示状态
-    @State private var isSplashActive: Bool = true
+    /// 全局认证与会话状态中枢
+    @State private var authStore = AuthStore()
+
+    /// 控制启动开屏动画的完成状态
+    @State private var isSplashAnimationFinished: Bool = false
+
+    /// 是否应保持开屏保护罩遮挡（等待动画播放完毕且会话完成解析）
+    private var isCoverActive: Bool {
+        !authStore.isSessionResolved || !isSplashAnimationFinished
+    }
 
     /// 当前生效的全局颜色外观配置
     ///
@@ -37,18 +45,34 @@ struct NemoApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                ContentView()
-                    .opacity(isSplashActive ? 0.0 : 1.0)
+                // 1. 核心导航守卫：仅当会话解析完成且已登录，才挂载主界面
+                if authStore.shouldShowMainInterface {
+                    ContentView()
+                        .transition(.opacity)
+                } else if authStore.shouldShowAuthentication {
+                    // 未登录/未注册状态：全屏展示登录流程，严禁挂载主界面与底栏
+                    LoginScreenView()
+                        .transition(.opacity)
+                }
 
-                if isSplashActive {
+                // 2. 启动开屏保护罩：在动效未完成或会话未解析时保持全屏遮挡
+                if isCoverActive {
                     NemoSplashView {
-                        withAnimation(.easeInOut(duration: 0.45)) {
-                            isSplashActive = false
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            isSplashAnimationFinished = true
                         }
                     }
                     .transition(.opacity)
-                    .zIndex(1)
+                    .zIndex(2)
                 }
+            }
+            .environment(authStore)
+            .task {
+                // 启动生命周期并发任务：会话解析 + 词库同步 + 权限/网络探针
+                async let sessionResolution: () = authStore.resolveSession()
+                async let startupDataSync: () = AppStartupManager.shared.performStartupSync()
+                async let permissions: () = SystemPermissionCoordinator.shared.requestStartupPermissionsAndProbeNetwork()
+                _ = await (sessionResolution, startupDataSync, permissions)
             }
             .preferredColorScheme(currentColorScheme)
             .animation(.easeInOut(duration: 0.35), value: currentColorScheme)

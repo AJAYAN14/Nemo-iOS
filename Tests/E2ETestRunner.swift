@@ -10,6 +10,8 @@ struct E2ETestRunner {
         let startTime = Date()
         
         // 1. 注册所有测试层级用例
+        AuthRemediationTests.registerAll()
+        AuthGuardAndStartupTests.registerAll()
         Tier1_FeatureTests.registerAll()
         Tier2_BoundaryTests.registerAll()
         Tier3_IntegrationTests.registerAll()
@@ -87,7 +89,7 @@ struct E2ETestRunner {
         
         if totalFailed == 0 {
             print("\n🎉 恭喜！全部 4-Tier \(totalCount) 项 E2E 自动化测试断言全部通过！\n")
-            exit(0)
+            return
         } else {
             print("\n💥 警告：存在 \(totalFailed) 项测试断言失败，请检查上方失败详情！\n")
             exit(1)

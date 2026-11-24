@@ -1,58 +1,6 @@
 import Foundation
 
-// MARK: - 基础模型定义（对齐 PROJECT.md 接口契约）
-
-public struct Word: Identifiable, Codable, Sendable, Hashable {
-    public let id: Int
-    public let rawId: String?
-    public let japanese: String
-    public let hiragana: String
-    public let chinese: String
-    public let level: String
-    public let pos: String?
-    public let example1: String?
-    public let gloss1: String?
-    public let example2: String?
-    public let gloss2: String?
-    public let example3: String?
-    public let gloss3: String?
-    public let isDelisted: Bool
-    public let updatedAt: String?
-    
-    public init(
-        id: Int,
-        rawId: String? = nil,
-        japanese: String,
-        hiragana: String,
-        chinese: String,
-        level: String,
-        pos: String? = "名",
-        example1: String? = nil,
-        gloss1: String? = nil,
-        example2: String? = nil,
-        gloss2: String? = nil,
-        example3: String? = nil,
-        gloss3: String? = nil,
-        isDelisted: Bool = false,
-        updatedAt: String? = nil
-    ) {
-        self.id = id
-        self.rawId = rawId
-        self.japanese = japanese
-        self.hiragana = hiragana
-        self.chinese = chinese
-        self.level = level
-        self.pos = pos
-        self.example1 = example1
-        self.gloss1 = gloss1
-        self.example2 = example2
-        self.gloss2 = gloss2
-        self.example3 = example3
-        self.gloss3 = gloss3
-        self.isDelisted = isDelisted
-        self.updatedAt = updatedAt
-    }
-}
+// MARK: - 测试协议定义
 
 public protocol SrsItem: Sendable {
     var repetitionCount: Int { get }
@@ -401,7 +349,7 @@ public final class SrsCalculatorImpl: Sendable {
             let rawEasy = fsrs.nextIntervalDays(stability: stateEasy.stability)
             
             var fuzzedHard = fsrs.fuzzIntervalDays(baseInterval: rawHard, seed: seed)
-            var fuzzedGood = fsrs.fuzzIntervalDays(baseInterval: rawGood, seed: seed)
+            let fuzzedGood = fsrs.fuzzIntervalDays(baseInterval: rawGood, seed: seed)
             var fuzzedEasy = fsrs.fuzzIntervalDays(baseInterval: rawEasy, seed: seed)
             
             // 严格单调性截断约束: Hard <= Good <= Easy
